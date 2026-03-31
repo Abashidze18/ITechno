@@ -48,14 +48,14 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
   return (
     <div className="min-h-screen text-slate-900">
       {/* SERVICES */}
-      <section className="mx-auto max-w-7xl px-6 py-8 md:px-10 md:py-14">
+      <section className="mx-auto max-w-[1440px] py-8 md:px-10 md:py-14">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
             <div className="sticky top-24">
-              <p className="text-sm text-slate-400">{t.header.badge}</p>
               <h2 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-[#111111] md:text-4xl">
-                {t.header.heading}
+                {t.header.badge}
               </h2>
+              <p className="text-sm text-slate-400">{t.header.heading}</p>
               <p className="mt-5 max-w-md text-base leading-8 text-slate-600">{t.header.sub}</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
                       onClick={() => toggleService(idx)}
                       className="flex w-full items-center justify-between gap-4 px-6 py-6 text-left md:px-8 md:py-7"
                     >
-                      <div className="flex items-center gap-4 md:gap-5">
+                      <div className="flex flex-col xs:flex-row items-start xs:items-center gap-4 md:gap-5">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
                           {Icon}
                         </div>
@@ -155,7 +155,7 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-7xl px-6 py-16 md:px-10 md:py-24">
+      <section className="mx-auto max-w-[1440px] py-16 md:px-10 md:py-24">
         <div className="rounded-[32px] bg-[#1976BA] px-8 py-10 text-white md:px-12 md:py-14">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-8">
