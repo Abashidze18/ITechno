@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const currentLang: SupportedLang = (lang === 'en' ? 'en' : 'ka') as SupportedLang
   const payload = await getPayload({ config: await config })
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+  const imageBaseUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL
 
   const { docs } = await payload.find({
     collection: 'products',
@@ -46,7 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const fullImageUrl = imageUrl.startsWith('http')
     ? imageUrl
     : imageUrl
-      ? `${baseUrl}${imageUrl}`
+      ? `${imageBaseUrl}${imageUrl}`
       : `${baseUrl}/og-image.png`
 
   return {
