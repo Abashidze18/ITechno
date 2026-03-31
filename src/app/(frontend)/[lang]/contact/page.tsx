@@ -26,80 +26,116 @@ type ContactPageData = {
   metaDescription: string
 }
 
-// --- 1. DYNAMIC METADATA ---
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const currentLang = (lang === 'en' ? 'en' : 'ka') as 'en' | 'ka'
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+type ContactDocs = {
+  page: ContactPageData
+  info: ContactInfoData
+}
+
+const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+
+// ── ერთი ფუნქცია — ორივე collection ერთდროულად, Promise.all-ით ──────────────
+async function getContactDocs(lang: 'ka' | 'en'): Promise<ContactDocs | null> {
   const payload = await getPayload({ config: configPromise })
 
-  const data = await payload.find({
-    collection: 'contact-page' as any,
-    locale: currentLang,
-    limit: 1,
-  })
+  const [pageData, infoData] = await Promise.all([
+    payload.find({ collection: 'contact-page' as any, locale: lang, limit: 1 }),
+    payload.find({ collection: 'contact-info' as any, locale: lang, limit: 1 }),
+  ])
 
-  const doc = data.docs[0] as unknown as ContactPageData | undefined
+  if (!pageData.docs.length || !infoData.docs.length) return null
+
+  return {
+    page: pageData.docs[0] as unknown as ContactPageData,
+    info: infoData.docs[0] as unknown as ContactInfoData,
+  }
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const currentLang = lang === 'en' ? 'en' : ('ka' as 'en' | 'ka')
+
+  const docs = await getContactDocs(currentLang)
 
   const title =
-    doc?.contactPageTitle ||
-    (currentLang === 'ka' ? 'კონტაქტი - დაგვიკავშირდით' : 'Contact Us - Get in Touch')
+    docs?.page?.contactPageTitle ||
+    (currentLang === 'ka' ? 'კონტაქტი | I-TECHNO' : 'Contact Us | I-TECHNO')
 
   const description =
-    doc?.metaDescription?.slice(0, 160) ||
+    (docs?.page?.metaDescription ?? '').slice(0, 160) ||
     (currentLang === 'ka'
       ? 'დაგვიკავშირდით I-TECHNO-ს გუნდს. მისამართი: თბილისი, საქართველო.'
-      : 'Contact I-TECHNO team. Address: Tbilisi, Georgia.')
+      : 'Contact the I-TECHNO team. Address: Tbilisi, Georgia.')
 
   return {
     title,
     description,
+
     alternates: {
-      canonical: `${baseUrl}/${currentLang}/contact`,
+      canonical: `${BASE_URL}/${currentLang}/contact`,
       languages: {
-        'ka-GE': `${baseUrl}/ka/contact`,
-        'en-US': `${baseUrl}/en/contact`,
+        'ka-GE': `${BASE_URL}/ka/contact`,
+        'en-US': `${BASE_URL}/en/contact`,
       },
     },
+
     openGraph: {
       title,
       description,
-      url: `${baseUrl}/${currentLang}/contact`,
+      url: `${BASE_URL}/${currentLang}/contact`,
       siteName: 'I-TECHNO',
-      images: [{ url: '/og-contact.jpg', width: 1200, height: 630 }],
       locale: currentLang === 'ka' ? 'ka_GE' : 'en_US',
       type: 'website',
+      images: [
+        {
+          url: `${BASE_URL}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${BASE_URL}/og-image.png`],
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-snippet': -1,
+        'max-image-preview': 'large',
+      },
     },
   }
 }
 
 export default async function ContactPage({ params }: Props) {
   const { lang } = await params
-  const currentLang = (lang === 'en' ? 'en' : 'ka') as 'en' | 'ka'
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
-  const payload = await getPayload({ config: configPromise })
+  const currentLang = lang === 'en' ? 'en' : ('ka' as 'en' | 'ka')
 
-  const [pageData, infoData] = await Promise.all([
-    payload.find({ collection: 'contact-page' as any, locale: currentLang, limit: 1 }),
-    payload.find({ collection: 'contact-info' as any, locale: currentLang, limit: 1 }),
-  ])
+  const docs = await getContactDocs(currentLang)
 
-  if (!pageData.docs.length || !infoData.docs.length) {
-    return notFound()
-  }
+  if (!docs) return notFound()
 
-  const t = pageData.docs[0] as unknown as ContactPageData
-  const contactInfo = infoData.docs[0] as unknown as ContactInfoData
+  const { page: t, info: contactInfo } = docs
 
-  // --- 2. LOCAL BUSINESS SCHEMA ---
-  const contactSchema = {
+  // LocalBusiness schema — კონტაქტ გვერდისთვის ყველაზე რელევანტური.
+  // Google Maps-ში და ლოკალურ ძიებაში ("security company Tbilisi") გამოჩენას ეხმარება.
+  const localBusinessSchema = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'I-TECHNO',
-    image: `${baseUrl}/og-image.jpg`,
-    '@id': `${baseUrl}/${currentLang}/contact`,
-    url: baseUrl,
+    image: `${BASE_URL}/og-image.png`,
+    '@id': `${BASE_URL}/contact`,
+    url: BASE_URL,
     telephone: contactInfo.phone,
+    email: contactInfo.email,
     address: {
       '@type': 'PostalAddress',
       streetAddress: contactInfo.address,
@@ -124,9 +160,10 @@ export default async function ContactPage({ params }: Props) {
     <main className="min-h-screen pb-12">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
       />
 
+      {/* HERO */}
       <div className="relative w-full max-w-[1440px] h-[250px] md:h-[300px] mx-auto flex items-center justify-center overflow-hidden rounded-[30px] md:rounded-[40px] mt-8">
         <Image
           src={ContactImage}
@@ -136,7 +173,7 @@ export default async function ContactPage({ params }: Props) {
           priority
           unoptimized
         />
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-black/20" aria-hidden="true" />
         <div className="relative z-10 text-center text-white px-4">
           <h1 className="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter leading-tight">
             {t.contactPageTitle}
@@ -145,14 +182,19 @@ export default async function ContactPage({ params }: Props) {
         </div>
       </div>
 
+      {/* CONTENT */}
       <div className="max-w-[1440px] mx-auto mt-12 lg:mt-24 px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
           <div className="lg:col-span-5">
-            <h2 className="sr-only">Contact Information</h2>
+            <h2 className="sr-only">
+              {currentLang === 'ka' ? 'საკონტაქტო ინფორმაცია' : 'Contact Information'}
+            </h2>
             <ContactInfo t={contactInfo} />
           </div>
           <div className="lg:col-span-7">
-            <h2 className="sr-only">Send us a message</h2>
+            <h2 className="sr-only">
+              {currentLang === 'ka' ? 'შეტყობინების გამოგზავნა' : 'Send us a message'}
+            </h2>
             <ContactForm lang={lang} />
           </div>
         </div>
