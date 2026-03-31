@@ -108,7 +108,7 @@ export const Footer = ({ lang }: FooterProps) => {
 
               <li>
                 <Link
-                  href={getLocalizedHref('/about')}
+                  href={getLocalizedHref('/about-us')}
                   className="hover:underline opacity-80 hover:opacity-100"
                 >
                   {t.nav.about}
