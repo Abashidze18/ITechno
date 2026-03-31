@@ -6,11 +6,10 @@ module.exports = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-    extend: {},
-  },
-  plugins: [],
-  theme: {
     extend: {
+      screens: {
+        xs: '480px',
+      },
       fontFamily: {
         lgv: ['var(--font-lgv)', 'sans-serif'],
         firaGo400: ['var(--font-firaGo-400)', 'sans-serif'],
@@ -18,4 +17,5 @@ module.exports = {
       },
     },
   },
+  plugins: [],
 }
