@@ -76,6 +76,7 @@ export default function AboutClient({ t }: { lang: string; t: AboutUsData }) {
             fill
             className="object-cover"
             priority
+            unoptimized
           />
         </div>
       </section>
@@ -130,9 +131,7 @@ export default function AboutClient({ t }: { lang: string; t: AboutUsData }) {
         <div className="max-w-[1440px] mx-auto">
           <div className="grid lg:grid-cols-12 gap-14 items-start">
             <div className="lg:col-span-4">
-              <span className="text-[16px] text-[#1976BA] font-firaGo600">
-                {data.whyUs.badge}
-              </span>
+              <span className="text-[16px] text-[#1976BA] font-firaGo600">{data.whyUs.badge}</span>
               <h2 className="mt-6 text-[34px] md:text-[44px] font-bold leading-tight text-[#0F172A]">
                 {data.whyUs.title}
               </h2>

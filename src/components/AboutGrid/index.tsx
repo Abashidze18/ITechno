@@ -26,6 +26,7 @@ const AboutGrid = ({ lang = 'ka' }: { lang: 'ka' | 'en' }) => {
               alt="Security Camera"
               className="object-contain drop-shadow-2xl"
               priority
+              unoptimized
             />
           </div>
 
@@ -50,6 +51,7 @@ const AboutGrid = ({ lang = 'ka' }: { lang: 'ka' | 'en' }) => {
             alt="Team"
             fill
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            unoptimized
           />
           <button className="absolute bottom-6 left-6 bg-white text-black px-6 py-2 rounded-xl flex items-center gap-2 font-firaGo400 hover:bg-gray-100 transition-colors z-10">
             {t.viewMore}

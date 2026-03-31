@@ -68,6 +68,7 @@ export const Footer = ({ lang }: FooterProps) => {
                 width={150}
                 height={50}
                 className="object-contain"
+                unoptimized
               />
             </Link>
 

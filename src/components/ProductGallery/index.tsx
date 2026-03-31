@@ -105,6 +105,7 @@ export default function ProductGallery({ mainImage, images, title }: ProductGall
                 fill
                 className="object-contain select-none"
                 quality={100}
+                unoptimized
               />
             </div>
 
@@ -132,6 +133,7 @@ export default function ProductGallery({ mainImage, images, title }: ProductGall
               priority
               className="object-contain hover:scale-105 transition-transform duration-500 cursor-zoom-in"
               onClick={() => openLightbox(activeImage)}
+              unoptimized
             />
           ) : (
             <div className="flex items-center justify-center h-full bg-gray-50 text-gray-300">
@@ -159,6 +161,7 @@ export default function ProductGallery({ mainImage, images, title }: ProductGall
                 alt={`${title} - ${index + 1}`}
                 fill
                 className="object-contain p-1 group-hover:scale-110 transition-transform"
+                unoptimized
               />
             </div>
           ))}

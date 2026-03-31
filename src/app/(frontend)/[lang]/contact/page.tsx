@@ -128,7 +128,14 @@ export default async function ContactPage({ params }: Props) {
       />
 
       <div className="relative w-full max-w-[1440px] h-[250px] md:h-[300px] mx-auto flex items-center justify-center overflow-hidden rounded-[30px] md:rounded-[40px] mt-8">
-        <Image src={ContactImage} alt={t.contactPageTitle} fill className="object-cover" priority />
+        <Image
+          src={ContactImage}
+          alt={t.contactPageTitle}
+          fill
+          className="object-cover"
+          priority
+          unoptimized
+        />
         <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10 text-center text-white px-4">
           <h1 className="text-3xl md:text-5xl font-black mb-4 uppercase tracking-tighter leading-tight">

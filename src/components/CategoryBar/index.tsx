@@ -48,7 +48,7 @@ export const CategoryBar = async ({ lang = 'ka' }: { lang?: string }) => {
           className="group flex-shrink-0 w-36 h-24 md:w-40 md:h-28 bg-[#1976BA] rounded-2xl flex flex-col items-center justify-center text-white gap-2 transition-all shadow-md overflow-hidden"
         >
           <div className="relative w-7 h-7 transition-transform duration-500 group-hover:scale-125">
-            <Image src={MenuIcon} alt="menu" fill className="invert brightness-0" />
+            <Image src={MenuIcon} alt="menu" fill className="invert brightness-0" unoptimized />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-tighter">
             {barData.allShopLabel || (lang === 'ka' ? 'ყველა' : 'All Shop')}
@@ -73,6 +73,7 @@ export const CategoryBar = async ({ lang = 'ka' }: { lang?: string }) => {
                 alt={cat.name}
                 fill
                 className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-110"
+                unoptimized
               />
 
               <div className="absolute inset-0 bg-black/50 transition-opacity duration-500 group-hover:bg-black/20" />
@@ -85,6 +86,7 @@ export const CategoryBar = async ({ lang = 'ka' }: { lang?: string }) => {
                       alt="icon"
                       fill
                       className="object-contain invert brightness-0"
+                      unoptimized
                     />
                   </div>
                 )}

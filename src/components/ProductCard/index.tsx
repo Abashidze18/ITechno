@@ -62,6 +62,7 @@ export const ProductCard = ({ product, lang }: ProductCardProps) => {
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+              unoptimized
             />
           ) : (
             <div className="text-gray-300 text-[10px]">სურათი არ არის</div>

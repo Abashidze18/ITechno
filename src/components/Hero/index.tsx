@@ -62,6 +62,7 @@ export const Hero = ({ lang = 'ka', t }: HeroProps) => {
               fill
               className="object-cover opacity-60 scale-105"
               priority={index === 0}
+              unoptimized
             />
 
             <div className="absolute inset-0 flex flex-col mt-10 sm:mt-0 sm:justify-center px-4 sm:px-8 md:px-14 max-w-4xl">
