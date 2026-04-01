@@ -75,7 +75,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: 'I-TECHNO',
       locale: currentLang === 'ka' ? 'ka_GE' : 'en_US',
       type: 'website',
-      images: [{ url: '/og-shop.jpg', width: 1200, height: 630 }],
+      images: [{ url: '/og-image.jpg', width: 1200, height: 630 }],
     },
   }
 }

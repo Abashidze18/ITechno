@@ -23,7 +23,7 @@ const CDN_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || 'https://cdn.itechno.co
 // ── IMPORTANT: ეს უნდა ემთხვეოდეს next.js app router-ის საქაღალდის სახელს ──
 // თუ საქაღალდე არის /app/[lang]/products/[slug]/page.tsx → 'products'
 // თუ საქაღალდე არის /app/[lang]/product-details/[slug]/page.tsx → 'product-details'
-const PRODUCTS_ROUTE = 'products' // ← შეამოწმე შენი app/ საქაღალდე და შეცვალე საჭიროების მიხედვით
+const PRODUCTS_ROUTE = 'product-details' // ← შეამოწმე შენი app/ საქაღალდე და შეცვალე საჭიროების მიხედვით
 
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return `${BASE_URL}/og-image.png` // default image URL
