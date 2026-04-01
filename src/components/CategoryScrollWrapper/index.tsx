@@ -19,9 +19,10 @@ export const CategoryScrollWrapper = ({ children }: { children: React.ReactNode 
     <div className="relative group/wrapper">
       <button
         onClick={() => scroll('left')}
+        aria-label="previous"
         className="absolute left-[-15px] top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl border border-gray-100 rounded-full p-2 opacity-0 group-hover/wrapper:opacity-100 transition-all hover:bg-gray-50 hidden md:block"
       >
-        <ChevronLeft className="w-5 h-5 text-gray-600" />
+        <ChevronLeft aria-hidden="true" className="w-5 h-5 text-gray-600" />
       </button>
 
       <div ref={scrollRef} className="flex gap-4 overflow-x-auto scroll-smooth no-scrollbar">
@@ -30,9 +31,10 @@ export const CategoryScrollWrapper = ({ children }: { children: React.ReactNode 
 
       <button
         onClick={() => scroll('right')}
+        aria-label="next"
         className="absolute right-[-15px] top-1/2 -translate-y-1/2 z-20 bg-white shadow-xl border border-gray-100 rounded-full p-2 opacity-0 group-hover/wrapper:opacity-100 transition-all hover:bg-gray-50 hidden md:block"
       >
-        <ChevronRight className="w-5 h-5 text-gray-600" />
+        <ChevronRight aria-hidden="true" className="w-5 h-5 text-gray-600" />
       </button>
     </div>
   )
