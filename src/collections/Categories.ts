@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import slugify from 'slugify'
+import { revalidateTag } from 'next/cache'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -10,6 +11,18 @@ export const Categories: CollectionConfig = {
   },
   access: {
     read: () => true,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidateTag('categories')
+      },
+    ],
+    afterDelete: [
+      () => {
+        revalidateTag('categories')
+      },
+    ],
   },
   fields: [
     {
@@ -50,9 +63,7 @@ export const Categories: CollectionConfig = {
       relationTo: 'categories',
       hasMany: false,
       maxDepth: 1,
-      admin: {
-        position: 'sidebar',
-      },
+      admin: { position: 'sidebar' },
     },
     {
       name: 'description',

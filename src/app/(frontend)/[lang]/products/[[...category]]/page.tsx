@@ -6,16 +6,14 @@ import { Where } from 'payload'
 import { Metadata } from 'next'
 import { PaginatedDocs } from 'payload'
 import { Category, Product } from '@/payload-types'
+import { getCachedCategories } from '@/lib/getCachedCategories' // ✅
 
 type Dictionary = typeof dict.ka
 type SupportedLang = 'ka' | 'en'
 type UniqueSpecs = Record<string, string[]>
 
 interface PageProps {
-  params: Promise<{
-    lang: string
-    category?: string[]
-  }>
+  params: Promise<{ lang: string; category?: string[] }>
   searchParams: Promise<{ [key: string]: string | undefined }>
 }
 
@@ -34,16 +32,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (categorySlug) {
     try {
-      const payload = await getPayload({ config: await config })
-      const categoryRes = await payload.find({
-        collection: 'categories',
-        where: { slug: { equals: categorySlug } },
-        locale: currentLang,
-        limit: 1,
-      })
-
-      if (categoryRes.docs.length > 0) {
-        const cat = categoryRes.docs[0] as Category
+      // ✅ cache-დან ვიღებთ, DB-ზე არ მივდივართ
+      const allCats = await getCachedCategories(currentLang)
+      const cat = allCats.find((c) => c.slug === categorySlug)
+      if (cat) {
         const catName = cat.name || categorySlug
         title = `${catName}`
         description =
@@ -99,15 +91,9 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   const { q, page: _page, ...filterParams } = resolvedSearchParams
 
-  // ✅ ერთი request — locale-ით, depth: 1 (parent relation-ისთვის საკმარისია)
-  const categoriesRes = await payload.find({
-    collection: 'categories',
-    limit: 500,
-    locale: currentLang,
-    depth: 1, // depth: 2 → 1 (parent.parent არ გვჭირდება)
-  })
+  // ✅ cache-დან — DB-ზე არ მივდივართ navigation-ზე
+  const allCategories = await getCachedCategories(currentLang)
 
-  const allCategories = categoriesRes.docs as Category[]
   let activeCategoryId: string | number | null = null
   let activeCategoryFilters: { name: string }[] = []
 
@@ -168,13 +154,10 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   Object.entries(filterParams).forEach(([_groupName, value]) => {
     if (value) {
-      andFilters.push({
-        'filter_values.value_rel.value': { equals: value },
-      })
+      andFilters.push({ 'filter_values.value_rel.value': { equals: value } })
     }
   })
 
-  // ✅ products და specs პარალელურად
   const [productsRes, specs] = await Promise.all([
     payload.find({
       collection: 'products',
@@ -185,10 +168,9 @@ export default async function Page({ params, searchParams }: PageProps) {
       depth: 2,
       sort: '-createdAt',
     }),
-    // ✅ Math.random() ამოღებულია — Next.js-ის cache მუშაობს
     fetch(
       `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/products/unique-specs?lang=${currentLang}`,
-      { next: { revalidate: 300 } }, // 5 წუთი cache
+      { next: { revalidate: 300 } },
     )
       .then((r) => (r.ok ? r.json() : {}))
       .catch(() => ({})),
