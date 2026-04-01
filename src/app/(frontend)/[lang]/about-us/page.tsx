@@ -9,7 +9,6 @@ interface Props {
   params: Promise<{ lang: string }>
 }
 
-// AboutUs დოკუმენტის ტიპი (payload-types.ts გენერაციამდე ხელით ვწერთ)
 type AboutUsDoc = {
   hero: {
     titleBlue: string
@@ -45,90 +44,100 @@ type AboutUsDoc = {
   }
 }
 
-// --- 1. SENIOR SEO: DYNAMIC METADATA FROM PAYLOAD ---
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { lang } = await params
-  const payload = await getPayload({ config: configPromise })
-  const currentLang = (lang === 'en' ? 'en' : 'ka') as 'en' | 'ka'
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
 
-  const aboutData = await payload.find({
+// ── ერთი fetch — ორივე generateMetadata და page იყენებს ──────────────────────
+async function getAboutDoc(lang: 'ka' | 'en'): Promise<AboutUsDoc | null> {
+  const payload = await getPayload({ config: configPromise })
+  const data = await payload.find({
     collection: 'about-us' as any,
-    locale: currentLang,
+    locale: lang,
     limit: 1,
   })
+  return (data.docs[0] as unknown as AboutUsDoc) ?? null
+}
 
-  const doc = aboutData.docs[0] as unknown as AboutUsDoc | undefined
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang } = await params
+  const currentLang = lang === 'en' ? 'en' : ('ka' as 'en' | 'ka')
+
+  const doc = await getAboutDoc(currentLang)
 
   const title = doc?.hero?.titleBlue
-    ? `${doc.hero.titleBlue} ${doc.hero.titleBlack}`
+    ? `${doc.hero.titleBlue} ${doc.hero.titleBlack} | I-TECHNO`
     : currentLang === 'ka'
       ? 'ჩვენს შესახებ | I-TECHNO'
       : 'About Us | I-TECHNO'
 
   const description =
-    doc?.hero?.story?.slice(0, 160) ||
+    (doc?.hero?.story ?? '').slice(0, 160) ||
     (currentLang === 'ka'
-      ? 'გაიცანით I-TECHNO. ჩვენ გთავაზობთ უმაღლესი ხარისხის უსაფრთხოების სისტემებს საქართველოში.'
-      : 'Meet I-TECHNO. High-quality security systems in Georgia.')
+      ? 'გაიცანით I-TECHNO — უმაღლესი ხარისხის უსაფრთხოების სისტემები საქართველოში.'
+      : 'Meet I-TECHNO — high-quality security systems in Georgia.')
+
+  const whyUsKeywords = doc?.whyUs?.items?.map((i) => i.title) ?? []
 
   return {
     title,
     description,
+    keywords:
+      currentLang === 'ka'
+        ? ['I-TECHNO', 'უსაფრთხოების სისტემები', 'კომპანია', 'საქართველო', ...whyUsKeywords]
+        : ['I-TECHNO', 'security systems', 'Georgia', 'about us', ...whyUsKeywords],
+
     alternates: {
-      canonical: `${baseUrl}/${currentLang}/about-us`,
+      canonical: `${BASE_URL}/${currentLang}/about-us`,
       languages: {
-        'ka-GE': `${baseUrl}/ka/about-us`,
-        'en-US': `${baseUrl}/en/about-us`,
+        'ka-GE': `${BASE_URL}/ka/about-us`,
+        'en-US': `${BASE_URL}/en/about-us`,
       },
     },
+
     openGraph: {
       title,
       description,
-      url: `${baseUrl}/${currentLang}/about-us`,
+      url: `${BASE_URL}/${currentLang}/about-us`,
       siteName: 'I-TECHNO',
+      locale: currentLang === 'ka' ? 'ka_GE' : 'en_US',
       type: 'website',
-      images: [{ url: '/og-about.jpg', width: 1200, height: 630, alt: 'About I-TECHNO' }],
+      images: [
+        {
+          url: `${BASE_URL}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [`${BASE_URL}/og/about.png`],
+    },
+
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-snippet': -1,
+        'max-image-preview': 'large',
+        'max-video-preview': -1,
+      },
     },
   }
 }
 
 export default async function AboutPage({ params }: Props) {
   const { lang } = await params
-  const currentLang = (lang === 'en' ? 'en' : 'ka') as 'en' | 'ka'
-  const payload = await getPayload({ config: configPromise })
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+  const currentLang = lang === 'en' ? 'en' : ('ka' as 'en' | 'ka')
 
-  const aboutData = await payload.find({
-    collection: 'about-us' as any,
-    locale: currentLang,
-    limit: 1,
-  })
+  const doc = await getAboutDoc(currentLang)
 
-  if (!aboutData.docs.length) {
-    return notFound()
-  }
+  if (!doc) return notFound()
 
-  const t = aboutData.docs[0] as unknown as AboutUsDoc
-
-  // --- 2. SENIOR SEO: ORGANIZATION SCHEMA ---
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'I-TECHNO',
-    url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
-    description: t.hero?.story,
-    sameAs: ['https://facebook.com/itechno', 'https://instagram.com/itechno'],
-  }
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-      />
-      <AboutusClient lang={lang} t={t} />
-    </>
-  )
+  return <AboutusClient lang={lang} t={doc} />
 }

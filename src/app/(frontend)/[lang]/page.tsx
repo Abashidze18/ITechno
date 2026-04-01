@@ -126,7 +126,7 @@ export default async function Page({ params }: PageParams) {
         '@type': 'LocalBusiness',
         '@id': `${baseUrl}/${lang}/#organization`,
         name: 'I-TECHNO',
-        image: `${baseUrl}/og-image.jpg`,
+        image: `${baseUrl}/og-image.png`,
         url: `${baseUrl}/${lang}`,
         telephone: '+995595126054',
         address: {
