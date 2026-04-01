@@ -48,8 +48,8 @@ export async function generateMetadata({
     alternates: {
       canonical: `/${lang}`,
       languages: {
-        'ka-GE': '/ka',
-        'en-US': '/en',
+        ka: '/ka',
+        en: '/en',
       },
     },
 
