@@ -6,16 +6,14 @@ import { Where } from 'payload'
 import { Metadata } from 'next'
 import { PaginatedDocs } from 'payload'
 import { Category, Product } from '@/payload-types'
+import { getCachedCategories } from '@/lib/getCachedCategories' // ✅
 
 type Dictionary = typeof dict.ka
 type SupportedLang = 'ka' | 'en'
 type UniqueSpecs = Record<string, string[]>
 
 interface PageProps {
-  params: Promise<{
-    lang: string
-    category?: string[]
-  }>
+  params: Promise<{ lang: string; category?: string[] }>
   searchParams: Promise<{ [key: string]: string | undefined }>
 }
 
@@ -34,16 +32,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (categorySlug) {
     try {
-      const payload = await getPayload({ config: await config })
-      const categoryRes = await payload.find({
-        collection: 'categories',
-        where: { slug: { equals: categorySlug } },
-        locale: currentLang,
-        limit: 1,
-      })
-
-      if (categoryRes.docs.length > 0) {
-        const cat = categoryRes.docs[0] as Category
+      // ✅ cache-დან ვიღებთ, DB-ზე არ მივდივართ
+      const allCats = await getCachedCategories(currentLang)
+      const cat = allCats.find((c) => c.slug === categorySlug)
+      if (cat) {
         const catName = cat.name || categorySlug
         title = `${catName}`
         description =
@@ -89,10 +81,8 @@ export default async function Page({ params, searchParams }: PageProps) {
   const currentLang: SupportedLang = (lang === 'en' ? 'en' : 'ka') as SupportedLang
   const t: Dictionary = (dict as Record<SupportedLang, Dictionary>)[currentLang] || dict.ka
 
-  // ბოლო სეგმენტი = ყველაზე სპეციფიკური category
   const categorySlug =
     categoryArray && categoryArray.length > 0 ? categoryArray[categoryArray.length - 1] : null
-  // მშობელი slug — დუბლიკატების გასარჩევად
   const parentSlug =
     categoryArray && categoryArray.length > 1 ? categoryArray[categoryArray.length - 2] : null
 
@@ -101,37 +91,19 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   const { q, page: _page, ...filterParams } = resolvedSearchParams
 
-  const [categoriesRes, categoriesDisplay] = await Promise.all([
-    // locale გარეშე — მხოლოდ id/parent relation-ისთვის, სტაბილური id-ები
-    payload.find({
-      collection: 'categories',
-      limit: 500,
-      depth: 2,
-    }),
-    // locale-ით — სახელების საჩვენებლად UI-ში
-    payload.find({
-      collection: 'categories',
-      limit: 500,
-      locale: currentLang,
-      depth: 1,
-    }),
-  ])
+  // ✅ cache-დან — DB-ზე არ მივდივართ navigation-ზე
+  const allCategories = await getCachedCategories(currentLang)
 
-  const allCategories = categoriesRes.docs as Category[]
   let activeCategoryId: string | number | null = null
   let activeCategoryFilters: { name: string }[] = []
 
   if (categorySlug) {
-    // ყველა matching slug მოვძებნოთ
     const matchingCats = allCategories.filter((c) => c.slug === categorySlug)
-
     let foundCat: Category | undefined
 
     if (matchingCats.length === 1) {
-      // უნიკალური slug — პირდაპირ ავიღოთ
       foundCat = matchingCats[0]
     } else if (matchingCats.length > 1 && parentSlug) {
-      // დუბლიკატი slug — parent-ით გავფილტროთ
       const parentCat = allCategories.find((c) => c.slug === parentSlug)
       foundCat = matchingCats.find((c) => {
         const pId =
@@ -140,7 +112,6 @@ export default async function Page({ params, searchParams }: PageProps) {
             : c.parent
         return String(pId) === String(parentCat?.id)
       })
-      // parent ვერ მოიძებნა — პირველი ავიღოთ fallback-ად
       if (!foundCat) foundCat = matchingCats[0]
     } else {
       foundCat = matchingCats[0]
@@ -183,33 +154,27 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   Object.entries(filterParams).forEach(([_groupName, value]) => {
     if (value) {
-      andFilters.push({
-        'filter_values.value_rel.value': { equals: value },
-      })
+      andFilters.push({ 'filter_values.value_rel.value': { equals: value } })
     }
   })
 
-  const productsRes = await payload.find({
-    collection: 'products',
-    where: andFilters.length > 0 ? { and: andFilters } : {},
-    locale: currentLang,
-    limit: 16,
-    page: validatedPage,
-    depth: 2,
-    sort: '-createdAt',
-  })
-
-  let specs: UniqueSpecs = {}
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-    const specsRes = await fetch(
-      `${baseUrl}/api/products/unique-specs?lang=${currentLang}&v=${Math.random()}`,
-      { cache: 'no-store' },
+  const [productsRes, specs] = await Promise.all([
+    payload.find({
+      collection: 'products',
+      where: andFilters.length > 0 ? { and: andFilters } : {},
+      locale: currentLang,
+      limit: 16,
+      page: validatedPage,
+      depth: 2,
+      sort: '-createdAt',
+    }),
+    fetch(
+      `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/products/unique-specs?lang=${currentLang}`,
+      { next: { revalidate: 300 } },
     )
-    if (specsRes.ok) specs = (await specsRes.json()) as UniqueSpecs
-  } catch (e) {
-    console.error('Specs fetch failed:', e)
-  }
+      .then((r) => (r.ok ? r.json() : {}))
+      .catch(() => ({})),
+  ])
 
   return (
     <main className="min-h-screen">
@@ -223,13 +188,13 @@ export default async function Page({ params, searchParams }: PageProps) {
 
       <Products
         products={productsRes as PaginatedDocs<Product>}
-        allCategories={categoriesDisplay.docs.map((c) => ({
-          ...(c as Category),
-          displayName: (c as Category).name || 'No Name',
+        allCategories={allCategories.map((c) => ({
+          ...c,
+          displayName: c.name || 'No Name',
         }))}
         lang={currentLang}
         t={t}
-        specs={specs}
+        specs={specs as UniqueSpecs}
         activeCategorySlug={categorySlug}
         categoryFilters={activeCategoryFilters.map((f) => f.name)}
       />
@@ -240,12 +205,14 @@ export default async function Page({ params, searchParams }: PageProps) {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'ItemList',
-            itemListElement: productsRes.docs.map((p: Product, index: number) => ({
-              '@type': 'ListItem',
-              position: index + 1,
-              url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
-              name: p.title,
-            })),
+            itemListElement: (productsRes as PaginatedDocs<Product>).docs.map(
+              (p: Product, index: number) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
+                name: p.title,
+              }),
+            ),
           }),
         }}
       />
