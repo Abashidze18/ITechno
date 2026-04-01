@@ -83,6 +83,7 @@ export async function generateMetadata({
       copyright: 'I-TECHNO',
       language: isEn ? 'en' : 'ka',
       keywords: keywordsStr, // დუბლირება 'other'-ში გარანტიისთვის
+      'google-site-verification': 'dlCfYAPOTkQB2y8YunhLDp1ayIJTeFd1nBD-C3uknQg',
     },
 
     icons: {
