@@ -72,8 +72,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: pageUrl,
       languages: {
-        'ka-GE': `${BASE_URL}/ka/${PRODUCTS_ROUTE}/${slug}`,
-        'en-US': `${BASE_URL}/en/${PRODUCTS_ROUTE}/${slug}`,
+        ka: `${BASE_URL}/ka/${PRODUCTS_ROUTE}/${slug}`,
+        en: `${BASE_URL}/en/${PRODUCTS_ROUTE}/${slug}`,
       },
     },
 
@@ -138,7 +138,9 @@ export default async function ProductDetails({ params }: PageProps) {
   )
   const displayPrice = hasDiscount ? product.discountPrice! : product.price || 0
 
-  const relatedRes = await (await getPayload({ config: await config })).find({
+  const relatedRes = await (
+    await getPayload({ config: await config })
+  ).find({
     collection: 'products',
     limit: 4,
     where: {
@@ -216,7 +218,10 @@ export default async function ProductDetails({ params }: PageProps) {
           aria-label="breadcrumb"
           className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-10 flex-wrap"
         >
-          <Link href={`/${currentLang}/${PRODUCTS_ROUTE}`} className="hover:text-[#1976BA] transition-colors">
+          <Link
+            href={`/${currentLang}/${PRODUCTS_ROUTE}`}
+            className="hover:text-[#1976BA] transition-colors"
+          >
             {currentLang === 'ka' ? 'პროდუქცია' : 'Products'}
           </Link>
           {category && (
@@ -253,8 +258,12 @@ export default async function ProductDetails({ params }: PageProps) {
                     ${product.stock === 'in-stock' ? 'bg-[#1976BA]' : 'bg-red-500'}`}
                 >
                   {product.stock === 'in-stock'
-                    ? currentLang === 'ka' ? 'მარაგშია' : 'In Stock'
-                    : currentLang === 'ka' ? 'არ არის მარაგში' : 'Out of Stock'}
+                    ? currentLang === 'ka'
+                      ? 'მარაგშია'
+                      : 'In Stock'
+                    : currentLang === 'ka'
+                      ? 'არ არის მარაგში'
+                      : 'Out of Stock'}
                 </div>
                 <p className="text-[12px] text-gray-600 font-medium font-firaGo400">
                   {currentLang === 'ka'
