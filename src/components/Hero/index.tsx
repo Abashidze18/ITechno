@@ -97,6 +97,8 @@ export const Hero = ({ lang = 'ka', t }: HeroProps) => {
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
+                aria-label={`slide ${i + 1}`}
+                aria-current={i === current ? 'true' : undefined}
                 className={`transition-all duration-300 rounded-full ${
                   i === current ? 'w-12 h-2 bg-[#1976BA]' : 'w-2 h-2 bg-white'
                 }`}

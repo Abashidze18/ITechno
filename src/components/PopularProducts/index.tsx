@@ -28,11 +28,17 @@ export const PopularProducts = ({ products, lang, title }: PopularProductsProps)
           </div>
 
           <div className="flex gap-2">
-            <button className="swiper-prev-btn p-3 rounded-full bg-white border border-gray-100 shadow-sm hover:bg-[#1976BA] hover:text-white transition-all text-gray-400">
-              <ChevronLeftIcon />
+            <button
+              aria-label="previous"
+              className="swiper-prev-btn p-3 rounded-full bg-white border border-gray-100 shadow-sm hover:bg-[#1976BA] hover:text-white transition-all text-gray-400"
+            >
+              <ChevronLeftIcon aria-hidden="true" />
             </button>
-            <button className="swiper-next-btn p-3 rounded-full bg-white border border-gray-100 shadow-sm hover:bg-[#1976BA] hover:text-white transition-all text-gray-400">
-              <ChevronRightIcon />
+            <button
+              aria-label="next"
+              className="swiper-next-btn p-3 rounded-full bg-white border border-gray-100 shadow-sm hover:bg-[#1976BA] hover:text-white transition-all text-gray-400"
+            >
+              <ChevronRightIcon aria-hidden="true" />
             </button>
           </div>
         </div>
