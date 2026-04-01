@@ -61,7 +61,7 @@ export async function generateMetadata({
         : 'უმაღლესი ხარისხის კამერები და დაცვის სისტემები.',
       url: `${baseUrl}/${lang}`,
       type: 'website',
-      locale: isEn ? 'en_US' : 'ka_GE',
+      locale: isEn ? 'en' : 'ka',
       images: [{ url: '/og-main.jpg', width: 1200, height: 630, alt: 'I-TECHNO' }],
     },
 
