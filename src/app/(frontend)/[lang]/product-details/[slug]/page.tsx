@@ -18,15 +18,11 @@ interface PageProps {
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
-const CDN_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || 'https://cdn.itechno.com'
-
-// ── IMPORTANT: ეს უნდა ემთხვეოდეს next.js app router-ის საქაღალდის სახელს ──
-// თუ საქაღალდე არის /app/[lang]/products/[slug]/page.tsx → 'products'
-// თუ საქაღალდე არის /app/[lang]/product-details/[slug]/page.tsx → 'product-details'
-const PRODUCTS_ROUTE = 'product-details' // ← შეამოწმე შენი app/ საქაღალდე და შეცვალე საჭიროების მიხედვით
+const CDN_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || 'https://cdn.itechno.ge'
+const PRODUCTS_ROUTE = 'product-details'
 
 function resolveImageUrl(url: string | null | undefined): string {
-  if (!url) return `${BASE_URL}/og-image.png` // default image URL
+  if (!url) return `${BASE_URL}/og-image.png`
   if (url.startsWith('http')) return url
   if (url.startsWith('/')) return `${CDN_URL}${url}`
   return `${CDN_URL}/${url}`
@@ -48,9 +44,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const currentLang = (lang === 'en' ? 'en' : 'ka') as SupportedLang
 
   const product = await getProduct(slug, currentLang, 1)
-  if (!product) return { title: currentLang === 'ka' ? 'პროდუქტი ვერ მოიძებნა' : 'Product not found' }
+  if (!product)
+    return { title: currentLang === 'ka' ? 'პროდუქტი ვერ მოიძებნა' : 'Product not found' }
 
   const mainImage = product.mainImage as unknown as Media | undefined
+  // resolveImageUrl — CDN სრული URL, არასდროს relative
   const imageUrl = resolveImageUrl(mainImage?.url)
 
   const title = product.title
@@ -60,16 +58,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? `${product.title} — შეიძინეთ გარანტიით I-TECHNO-ში.`
       : `${product.title} — Buy with warranty at I-TECHNO.`
 
-  // ── canonical და og:url უნდა იყოს ზუსტად ერთი და იგივე URL ──────────────
-  // Facebook, Twitter და Google ამ URL-ს იყენებს redirect-ის გარეშე
   const pageUrl = `${BASE_URL}/${currentLang}/${PRODUCTS_ROUTE}/${slug}`
 
   return {
+    // ── metadataBase აუცილებელია ──────────────────────────────────────────────
+    // გარეშე: Next.js locale: 'ka_GE'-ს flagcdn.com/ge.svg-ად გარდაქმნის og:image-ში
+    // არსებობისას: ყველა URL სწორად რეზოლვდება BASE_URL-ის მიმართ
+    metadataBase: new URL(BASE_URL),
+
     title,
     description,
 
     alternates: {
-      canonical: pageUrl, // ← ზუსტი route
+      canonical: pageUrl,
       languages: {
         'ka-GE': `${BASE_URL}/ka/${PRODUCTS_ROUTE}/${slug}`,
         'en-US': `${BASE_URL}/en/${PRODUCTS_ROUTE}/${slug}`,
@@ -79,13 +80,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title,
       description,
-      url: pageUrl, // ← canonical-ის იდენტური, redirect არ ხდება
+      url: pageUrl,
       type: 'website',
       siteName: 'I-TECHNO',
-      locale: currentLang === 'ka' ? 'ka_GE' : 'en_US',
+      // locale გამოტოვებულია — სწორედ ეს იწვევდა flagcdn bug-ს
       images: [
         {
-          url: imageUrl, // CDN სრული URL
+          url: imageUrl, // სრული CDN URL — relative არ არის
           width: 1200,
           height: 630,
           alt: product.title,
@@ -341,7 +342,11 @@ export default async function ProductDetails({ params }: PageProps) {
                 className="group flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest border-b border-black pb-1 hover:text-[#1976BA] hover:border-[#1976BA] transition-all"
               >
                 {currentLang === 'ka' ? 'ყველას ნახვა' : 'View All'}
-                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform"
+                  aria-hidden="true"
+                />
               </Link>
             </div>
 
