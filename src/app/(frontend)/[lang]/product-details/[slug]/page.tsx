@@ -85,6 +85,7 @@ export default async function ProductDetails({ params }: PageProps) {
   const { slug, lang } = await params
   const payload = await getPayload({ config: await config })
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+  const imageBaseUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL
 
   const currentLang: SupportedLang = (lang === 'en' ? 'en' : 'ka') as SupportedLang
   const t: Dictionary = (dict as Record<SupportedLang, Dictionary>)[currentLang] || dict.ka
@@ -131,7 +132,7 @@ export default async function ProductDetails({ params }: PageProps) {
     '@context': 'https://schema.org/',
     '@type': 'Product',
     name: product.title,
-    image: mainImage?.url ? `${baseUrl}${mainImage.url}` : '',
+    image: mainImage?.url ? `${imageBaseUrl}${mainImage.url}` : '',
     description: product.description || product.title,
     brand: { '@type': 'Brand', name: 'I-Techno' },
     offers: {
