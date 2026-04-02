@@ -6,7 +6,7 @@ import { Where } from 'payload'
 import { Metadata } from 'next'
 import { PaginatedDocs } from 'payload'
 import { Category, Product } from '@/payload-types'
-import { getCachedCategories } from '@/lib/getCachedCategories' // ✅
+import { getCachedCategories } from '@/lib/getCachedCategories'
 
 type Dictionary = typeof dict.ka
 type SupportedLang = 'ka' | 'en'
@@ -32,7 +32,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (categorySlug) {
     try {
-      // ✅ cache-დან ვიღებთ, DB-ზე არ მივდივართ
       const allCats = await getCachedCategories(currentLang)
       const cat = allCats.find((c) => c.slug === categorySlug)
       if (cat) {
@@ -91,11 +90,11 @@ export default async function Page({ params, searchParams }: PageProps) {
 
   const { q, page: _page, ...filterParams } = resolvedSearchParams
 
-  // ✅ cache-დან — DB-ზე არ მივდივართ navigation-ზე
+  // 1. კატეგორიების წამოღება
   const allCategories = await getCachedCategories(currentLang)
 
   let activeCategoryId: string | number | null = null
-  let activeCategoryFilters: { name: string }[] = []
+  let categoryFilterNames: string[] = [] // სახელების მასივი Products-ისთვის
 
   if (categorySlug) {
     const matchingCats = allCategories.filter((c) => c.slug === categorySlug)
@@ -119,7 +118,20 @@ export default async function Page({ params, searchParams }: PageProps) {
 
     if (foundCat) {
       activeCategoryId = foundCat.id
-      activeCategoryFilters = (foundCat.assignedFilters as { name: string }[]) || []
+
+      // 1. ვიღებთ ID-ების მასივს (შენს შემთხვევაში მოდის [1])
+      const filterIds = (foundCat.assignedFilters as (string | number)[]) || []
+
+      const filtersData = await payload.find({
+        collection: 'filters',
+        where: {
+          id: { in: filterIds },
+        },
+        locale: currentLang,
+        limit: 100,
+      })
+
+      categoryFilterNames = filtersData.docs.map((f) => f.name).filter(Boolean)
     }
   }
 
@@ -152,7 +164,8 @@ export default async function Page({ params, searchParams }: PageProps) {
     })
   }
 
-  Object.entries(filterParams).forEach(([_groupName, value]) => {
+  // URL ფილტრების დამუშავება
+  Object.entries(filterParams).forEach(([key, value]) => {
     if (value) {
       andFilters.push({ 'filter_values.value_rel.value': { equals: value } })
     }
@@ -196,7 +209,7 @@ export default async function Page({ params, searchParams }: PageProps) {
         t={t}
         specs={specs as UniqueSpecs}
         activeCategorySlug={categorySlug}
-        categoryFilters={activeCategoryFilters.map((f) => f.name)}
+        categoryFilters={categoryFilterNames}
       />
 
       <script
@@ -205,14 +218,12 @@ export default async function Page({ params, searchParams }: PageProps) {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'ItemList',
-            itemListElement: (productsRes as PaginatedDocs<Product>).docs.map(
-              (p: Product, index: number) => ({
-                '@type': 'ListItem',
-                position: index + 1,
-                url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
-                name: p.title,
-              }),
-            ),
+            itemListElement: productsRes.docs.map((p: Product, index: number) => ({
+              '@type': 'ListItem',
+              position: index + 1,
+              url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
+              name: p.title,
+            })),
           }),
         }}
       />

@@ -22,10 +22,9 @@ interface ProductsProps {
   allCategories: CategoryWithDisplay[]
   lang: 'ka' | 'en'
   t: Dictionary
-  // 1. შევცვალეთ ტიპი დინამიურზე
   specs: Record<string, string[]>
   activeCategorySlug: string | null
-  // 2. დავამატეთ კატეგორიის ფილტრების სია
+  // აქ ვიღებთ სახელებს, რადგან specs-ის Key არის სახელი (მაგ: "Resolution")
   categoryFilters?: string[]
 }
 
@@ -55,16 +54,17 @@ export const Products = ({
     const params = new URLSearchParams(searchParams.toString())
 
     if (value === null || searchParams.get(groupName) === value) {
-      params.delete(groupName) // თუ უკვე არჩეულია, წავშალოთ (Deselect)
+      params.delete(groupName)
     } else {
-      params.set(groupName, value) // თუ ახალია, ჩავწეროთ
+      params.set(groupName, value)
     }
 
-    params.delete('page') // ფილტრისას ყოველთვის პირველ გვერდზე დავაბრუნოთ
+    params.delete('page')
     return `${pathname}?${params.toString()}`
   }
 
   const activeCategory = allCategories.find((c) => c.slug === activeCategorySlug)
+
   const getParentId = (cat: CategoryWithDisplay) =>
     typeof cat.parent === 'object' ? cat.parent?.id : cat.parent
 
@@ -113,7 +113,7 @@ export const Products = ({
   }
 
   return (
-    <main className="container max-w-[1440px] mx-auto pt-6 pb-20">
+    <main className="container max-w-[1440px] mx-auto pt-6 pb-20 px-4 lg:px-8">
       <div className="mb-8">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
           <div>

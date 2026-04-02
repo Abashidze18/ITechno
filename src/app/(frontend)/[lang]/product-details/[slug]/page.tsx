@@ -20,6 +20,7 @@ interface PageProps {
 const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
 const CDN_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || 'https://cdn.itechno.ge'
 const PRODUCTS_ROUTE = 'product-details'
+const PRODUCTS_LIST_ROUTE = 'products'
 
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return `${BASE_URL}/og-image.png`
@@ -219,7 +220,7 @@ export default async function ProductDetails({ params }: PageProps) {
           className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-10 flex-wrap"
         >
           <Link
-            href={`/${currentLang}/${PRODUCTS_ROUTE}`}
+            href={`/${currentLang}/${PRODUCTS_LIST_ROUTE}`}
             className="hover:text-[#1976BA] transition-colors"
           >
             {currentLang === 'ka' ? 'პროდუქცია' : 'Products'}
@@ -228,7 +229,7 @@ export default async function ProductDetails({ params }: PageProps) {
             <>
               <ChevronRight size={10} className="shrink-0" aria-hidden="true" />
               <Link
-                href={`/${currentLang}/${PRODUCTS_ROUTE}/${category.slug}`}
+                href={`/${currentLang}/${PRODUCTS_LIST_ROUTE}/${category.slug}`}
                 className="hover:text-[#1976BA] transition-colors"
               >
                 {category.name}
