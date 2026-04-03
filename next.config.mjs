@@ -15,7 +15,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/_next/static/:path*', // ✅ უფრო სპეციფიკური rule პირველი უნდა იყოს
+        source: '/_next/static/:path*',
         headers: [{ key: 'X-Robots-Tag', value: 'noindex' }],
       },
       {
@@ -26,6 +26,10 @@ const nextConfig = {
             value: isProduction ? 'index, follow, max-image-preview:large' : 'noindex, nofollow',
           },
           { key: 'X-Publisher', value: 'I-TECHNO' },
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=59',
+          },
         ],
       },
     ]
