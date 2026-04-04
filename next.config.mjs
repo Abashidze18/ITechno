@@ -27,6 +27,10 @@ const nextConfig = {
           },
           { key: 'X-Publisher', value: 'I-TECHNO' },
           {
+            key: 'Vary',
+            value: 'Accept',
+          },
+          {
             key: 'Cache-Control',
             value: 'public, s-maxage=3600, stale-while-revalidate=59',
           },
