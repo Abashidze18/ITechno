@@ -110,7 +110,7 @@ export default function AboutClient({ t }: { lang: string; t: AboutUsData }) {
 
       <div className="bg-white text-[#0F172A] antialiased">
         {/* HERO SECTION */}
-        <section className="max-w-[1440px] mx-auto pt-12 sm:pb-24 px-6 grid lg:grid-cols-2 gap-20 items-center">
+        <section className="max-w-[1440px] mx-auto pt-12 sm:pb-24 grid lg:grid-cols-2 gap-20 items-center">
           <div>
             {/* h1 — გვერდის მთავარი სათაური */}
             <h1 className="text-[48px] text-[#1976BA] md:text-[72px] font-bold leading-[1.05] uppercase tracking-tight">

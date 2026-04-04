@@ -273,7 +273,7 @@ export default async function ProductDetails({ params }: PageProps) {
                 </p>
               </div>
 
-              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 leading-[1.15]">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 leading-[1.15] break-words">
                 {product.title}
               </h1>
             </div>
@@ -347,17 +347,6 @@ export default async function ProductDetails({ params }: PageProps) {
                 </h2>
                 <div className="h-1 w-12 bg-[#1976BA] rounded-full" />
               </div>
-              <Link
-                href={`/${currentLang}/${PRODUCTS_ROUTE}`}
-                className="group flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest border-b border-black pb-1 hover:text-[#1976BA] hover:border-[#1976BA] transition-all"
-              >
-                {currentLang === 'ka' ? 'ყველას ნახვა' : 'View All'}
-                <ArrowRight
-                  size={14}
-                  className="group-hover:translate-x-1 transition-transform"
-                  aria-hidden="true"
-                />
-              </Link>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
