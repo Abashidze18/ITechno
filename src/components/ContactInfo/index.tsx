@@ -1,12 +1,36 @@
 'use client'
 
-import { Phone, Mail, Facebook, MapPin } from 'lucide-react'
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter,
+  Youtube,
+  Globe,
+} from 'lucide-react'
+
+// ხატულების ობიექტი
+const IconMap = {
+  facebook: Facebook,
+  instagram: Instagram,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  youtube: Youtube,
+  globe: Globe,
+}
 
 type ContactInfoData = {
   infoTitle: string
   phone: string
   email: string
-  social: string
+  socials: {
+    platformName: string
+    icon: keyof typeof IconMap
+    url: string
+  }[]
   address: string
   mapEmbedUrl: string
 }
@@ -42,12 +66,29 @@ const ContactInfo = ({ t }: { t: ContactInfoData }) => {
             <span>{t.email}</span>
           </a>
 
-          <div className="flex items-center gap-4">
-            <Facebook className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
-            <span itemProp="sameAs">{t.social}</span>
-          </div>
+          {/* მხოლოდ აქ დაემატა Map ლოგიკა */}
+          {t.socials?.map((social, index) => {
+            const IconComponent = IconMap[social.icon] || Globe
+            return (
+              <a
+                key={index}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+              >
+                <IconComponent className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
+                <span>{social.platformName}</span>
+              </a>
+            )
+          })}
 
-          <div className="flex items-center gap-4 mt-8" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+          <div
+            className="flex items-center gap-4 mt-8"
+            itemProp="address"
+            itemScope
+            itemType="https://schema.org/PostalAddress"
+          >
             <MapPin className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
             <span itemProp="streetAddress">{t.address}</span>
           </div>

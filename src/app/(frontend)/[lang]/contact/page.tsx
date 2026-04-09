@@ -15,7 +15,11 @@ type ContactInfoData = {
   infoTitle: string
   phone: string
   email: string
-  social: string
+  socials: {
+    platformName: string
+    icon: 'facebook' | 'instagram' | 'linkedin' | 'twitter' | 'youtube' | 'globe'
+    url: string
+  }[]
   address: string
   mapEmbedUrl: string
 }

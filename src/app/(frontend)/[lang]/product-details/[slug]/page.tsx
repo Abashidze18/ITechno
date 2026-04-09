@@ -243,12 +243,19 @@ export default async function ProductDetails({ params }: PageProps) {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 mb-32 items-start">
-          <div className="lg:col-span-5 w-full max-w-lg mx-auto lg:mx-0">
+          <div className="lg:col-span-5 w-full max-w-lg mx-auto lg:mx-0 flex flex-col gap-10">
             <ProductGallery
               mainImage={resolveImageUrl(mainImage?.url)}
               images={galleryImages}
               title={product.title}
             />
+            {product.specifications && (
+              <div className="border-l-2 border-slate-100 px-8 py-4 mb-8 bg-slate-50/50 rounded-r-xl">
+                <p className="text-sm leading-relaxed text-slate-500 font-light max-w-md">
+                  {product.specifications}
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-7 flex flex-col">
@@ -305,14 +312,6 @@ export default async function ProductDetails({ params }: PageProps) {
                 {product.description}
               </div>
             </div>
-
-            {product.specifications && (
-              <div className="border-l-2 border-slate-100 pl-8 py-2 mb-8 bg-slate-50/50 rounded-r-xl">
-                <p className="text-sm leading-relaxed text-slate-500 font-light max-w-md">
-                  {product.specifications}
-                </p>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 max-w-xl">
               <a

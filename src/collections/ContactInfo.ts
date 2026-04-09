@@ -33,9 +33,44 @@ export const ContactInfo: CollectionConfig = {
       type: 'text',
     },
     {
-      name: 'social',
-      type: 'text',
-      localized: true,
+      name: 'socials',
+      label: 'Social Networks',
+      type: 'array',
+      fields: [
+        {
+          name: 'platformName',
+          label: 'Platform Name',
+          type: 'text',
+          required: true,
+          admin: {
+            placeholder: 'მაგ: Facebook, Instagram...',
+          },
+        },
+        {
+          name: 'icon',
+          label: 'Icon',
+          type: 'select',
+          required: true,
+          defaultValue: 'facebook',
+          options: [
+            { label: 'Facebook', value: 'facebook' },
+            { label: 'Instagram', value: 'instagram' },
+            { label: 'LinkedIn', value: 'linkedin' },
+            { label: 'Twitter / X', value: 'twitter' },
+            { label: 'Youtube', value: 'youtube' },
+            { label: 'Globe / Website', value: 'globe' },
+          ],
+        },
+        {
+          name: 'url',
+          label: 'Link',
+          type: 'text',
+          required: true,
+          admin: {
+            placeholder: 'https://...',
+          },
+        },
+      ],
     },
     {
       name: 'address',
