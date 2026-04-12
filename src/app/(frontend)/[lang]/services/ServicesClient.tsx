@@ -25,16 +25,11 @@ type ServicesDoc = {
 }
 
 const ICONS = [
-  // eslint-disable-next-line react/jsx-key
-  <Camera className="w-6 h-6 text-slate-900" />,
-  // eslint-disable-next-line react/jsx-key
-  <ShieldAlert className="w-6 h-6 text-slate-900" />,
-  // eslint-disable-next-line react/jsx-key
-  <Key className="w-6 h-6 text-slate-900" />,
-  // eslint-disable-next-line react/jsx-key
-  <Cpu className="w-6 h-6 text-slate-900" />,
-  // eslint-disable-next-line react/jsx-key
-  <Network className="w-6 h-6 text-slate-900" />,
+  <Camera key="cam" className="w-6 h-6 text-slate-900" />,
+  <ShieldAlert key="shield" className="w-6 h-6 text-slate-900" />,
+  <Key key="key" className="w-6 h-6 text-slate-900" />,
+  <Cpu key="cpu" className="w-6 h-6 text-slate-900" />,
+  <Network key="net" className="w-6 h-6 text-slate-900" />,
 ]
 
 function ServicesJsonLd({ t }: { t: ServicesDoc }) {
@@ -66,6 +61,7 @@ function ServicesJsonLd({ t }: { t: ServicesDoc }) {
   )
 }
 
+// SEO: JSON-LD for FAQ
 function FaqJsonLd({ t }: { t: ServicesDoc }) {
   const schema = {
     '@context': 'https://schema.org',
@@ -88,7 +84,7 @@ function FaqJsonLd({ t }: { t: ServicesDoc }) {
   )
 }
 
-export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) {
+export default function ServicesClient({ lang, t }: { lang: string; t: ServicesDoc }) {
   const [openId, setOpenId] = useState<number>(0)
 
   const toggleService = (idx: number) => {
@@ -156,7 +152,9 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
                               {service.title}
                             </h2>
                             <p className="mt-1 text-sm text-slate-500">
-                              დააჭირეთ დეტალების სანახავად
+                              {lang === 'ka'
+                                ? 'დააჭირეთ დეტალების სანახავად'
+                                : 'Click to view details'}
                             </p>
                           </div>
                         </div>
@@ -190,7 +188,9 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
 
                             {service.brands && service.brands.length > 0 && (
                               <div className="mt-6">
-                                <p className="mb-3 text-sm font-medium text-slate-400">ბრენდები</p>
+                                <p className="mb-3 text-sm font-medium text-slate-400">
+                                  {lang === 'ka' ? 'ბრენდები' : 'Brands'}
+                                </p>
                                 <div className="flex flex-wrap gap-2">
                                   {service.brands.map((brand, i) => (
                                     <span
@@ -210,7 +210,7 @@ export default function ServicesClient({ t }: { lang: string; t: ServicesDoc }) 
                             {service.features && service.features.length > 0 && (
                               <div className="mt-6">
                                 <p className="mb-3 text-sm font-medium text-slate-400">
-                                  ძირითადი შესაძლებლობები
+                                  {lang === 'ka' ? 'ძირითადი შესაძლებლობები' : 'Key Features'}
                                 </p>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                   {service.features.map((feature, i) => (

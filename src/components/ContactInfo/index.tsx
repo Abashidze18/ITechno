@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react' // დავამატეთ useEffect დებაგისთვის
 import {
   Phone,
   Mail,
@@ -36,17 +35,6 @@ type ContactInfoData = {
 }
 
 const ContactInfo = ({ t }: { t: ContactInfoData }) => {
-  // კონსოლის ლოგი დებაგისთვის
-  useEffect(() => {
-    console.log('--- Contact Info Debug ---')
-    console.log('Full Data Object (t):', t)
-    console.log('Socials Array:', t?.socials)
-
-    if (t?.socials && t.socials.length === 0) {
-      console.warn('გაფრთხილება: socials მასივი ცარიელია!')
-    }
-  }, [t])
-
   return (
     <address
       className="not-italic bg-gradient-to-br from-[#1976BA] to-[#71C3FF] text-white p-8 rounded-[30px] shadow-lg h-full flex flex-col justify-between min-h-[500px]"
