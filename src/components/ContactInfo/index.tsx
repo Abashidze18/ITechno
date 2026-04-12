@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react' // დავამატეთ useEffect დებაგისთვის
 import {
   Phone,
   Mail,
@@ -12,7 +13,6 @@ import {
   Globe,
 } from 'lucide-react'
 
-// ხატულების ობიექტი
 const IconMap = {
   facebook: Facebook,
   instagram: Instagram,
@@ -36,6 +36,17 @@ type ContactInfoData = {
 }
 
 const ContactInfo = ({ t }: { t: ContactInfoData }) => {
+  // კონსოლის ლოგი დებაგისთვის
+  useEffect(() => {
+    console.log('--- Contact Info Debug ---')
+    console.log('Full Data Object (t):', t)
+    console.log('Socials Array:', t?.socials)
+
+    if (t?.socials && t.socials.length === 0) {
+      console.warn('გაფრთხილება: socials მასივი ცარიელია!')
+    }
+  }, [t])
+
   return (
     <address
       className="not-italic bg-gradient-to-br from-[#1976BA] to-[#71C3FF] text-white p-8 rounded-[30px] shadow-lg h-full flex flex-col justify-between min-h-[500px]"
@@ -46,9 +57,8 @@ const ContactInfo = ({ t }: { t: ContactInfoData }) => {
         <h3 className="text-2xl md:text-3xl mb-8">{t.infoTitle}</h3>
 
         <div className="space-y-6 font-firaGo400">
-          {/* tel: ბმული — Google-ი click-to-call-ად ცნობს */}
           <a
-            href={`tel:${t.phone.replace(/\s/g, '')}`}
+            href={`tel:${t.phone?.replace(/\s/g, '')}`}
             className="flex items-center gap-4 hover:opacity-80 transition-opacity"
             itemProp="telephone"
           >
@@ -56,7 +66,6 @@ const ContactInfo = ({ t }: { t: ContactInfoData }) => {
             <span>{t.phone}</span>
           </a>
 
-          {/* mailto: ბმული */}
           <a
             href={`mailto:${t.email}`}
             className="flex items-center gap-4 hover:opacity-80 transition-opacity"
@@ -66,22 +75,27 @@ const ContactInfo = ({ t }: { t: ContactInfoData }) => {
             <span>{t.email}</span>
           </a>
 
-          {/* მხოლოდ აქ დაემატა Map ლოგიკა */}
-          {t.socials?.map((social, index) => {
-            const IconComponent = IconMap[social.icon] || Globe
-            return (
-              <a
-                key={index}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-4 hover:opacity-80 transition-opacity"
-              >
-                <IconComponent className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
-                <span>{social.platformName}</span>
-              </a>
-            )
-          })}
+          {/* სოციალური ქსელების რენდერი */}
+          {t.socials && t.socials.length > 0
+            ? t.socials.map((social, index) => {
+                const IconComponent = IconMap[social.icon] || Globe
+                return (
+                  <a
+                    key={index}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+                  >
+                    <IconComponent className="w-6 h-6 flex-shrink-0" aria-hidden="true" />
+                    <span>{social.platformName}</span>
+                  </a>
+                )
+              })
+            : /* ეს მხოლოდ დებაგისთვის გამოჩნდება ეკრანზე, თუ მასივი ცარიელია */
+              process.env.NODE_ENV === 'development' && (
+                <p className="text-xs text-red-200">Socials array is empty or missing.</p>
+              )}
 
           <div
             className="flex items-center gap-4 mt-8"
