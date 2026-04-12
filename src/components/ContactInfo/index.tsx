@@ -80,8 +80,7 @@ const ContactInfo = ({ t }: { t: ContactInfoData }) => {
                   </a>
                 )
               })
-            : /* ეს მხოლოდ დებაგისთვის გამოჩნდება ეკრანზე, თუ მასივი ცარიელია */
-              process.env.NODE_ENV === 'development' && (
+            : process.env.NODE_ENV === 'development' && (
                 <p className="text-xs text-red-200">Socials array is empty or missing.</p>
               )}
 

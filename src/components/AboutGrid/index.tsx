@@ -63,13 +63,26 @@ const AboutGrid = ({ lang = 'ka' }: { lang: 'ka' | 'en' }) => {
           <h3 className="text-[#1976BA] text-3xl md:text-4xl font-lgv mb-6 uppercase">
             {t.contactUs}
           </h3>
-          <div className="space-y-3 text-lg font-firaGo600 text-gray-800">
-            <p>+995 595 12 60 54</p>
-            <p className="hover:text-[#0081D7] cursor-pointer inline-block">Instagram</p>
-            <p className="hover:text-[#0081D7] cursor-pointer inline-block ml-4 lg:ml-0 lg:block">
-              Facebook
+          <div className="flex flex-col gap-3 text-lg font-firaGo600 text-gray-800">
+            <a
+              href={`tel:+995 595 12 60 54`}
+              className="flex items-center gap-4 hover:text-[#0081D7] transition-opacity"
+              itemProp="telephone"
+            >
+              <span>+995 595 12 60 54</span>
+            </a>
+            <a
+              href="https://www.facebook.com/share/17VCGyPetv/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <p className="hover:text-[#0081D7] cursor-pointer inline-block ml-4 lg:ml-0 lg:block">
+                Facebook
+              </p>
+            </a>
+            <p className="hover:text-[#0081D7] cursor-pointer inline-block ml-4 lg:ml-0 lg:block m-0">
+              {t.address}
             </p>
-            <p>{t.address}</p>
           </div>
         </div>
       </div>
