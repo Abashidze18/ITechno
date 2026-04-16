@@ -81,6 +81,12 @@ export default function InvoiceGenerator() {
     setProducts([])
   }
 
+  const addExtraFee = () => {
+    if (extraFees.length < 10) {
+      setExtraFees((prev) => [...prev, { label: '', amount: 0 }])
+    }
+  }
+
   const updateExtraFee = (index: number, field: 'label' | 'amount', value: string | number) => {
     setExtraFees((prev) => prev.map((fee, i) => (i === index ? { ...fee, [field]: value } : fee)))
   }
@@ -117,17 +123,17 @@ export default function InvoiceGenerator() {
 
     doc.setFontSize(10)
     doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
-    doc.text('ადრესატი', 14, 60)
+    doc.text('ადრესატი', 14, 30)
 
     doc.setFontSize(12)
     doc.setTextColor(textColor[0], textColor[1], textColor[2])
-    doc.text(clientName, 14, 67)
+    doc.text(clientName, 14, 37)
 
     doc.setFontSize(10)
     doc.setTextColor(lightText[0], lightText[1], lightText[2])
-    doc.text(`ს/კ: ${clientTaxId}`, 14, 73)
+    doc.text(`ს/კ: ${clientTaxId}`, 14, 43)
     if (clientAddress) {
-      doc.text(`მის: ${clientAddress}`, 14, 78)
+      doc.text(`მის: ${clientAddress}`, 14, 48)
     }
 
     // ცხრილი — პროდუქტები + დამატებითი ხარჯები
@@ -146,7 +152,7 @@ export default function InvoiceGenerator() {
     })
 
     autoTable(doc, {
-      startY: 95,
+      startY: clientAddress ? 68 : 62,
       head: [['რაოდ.', 'აღწერა', 'საცალო ფასი', 'ჯამი']],
       body: tableBody,
 
@@ -233,7 +239,7 @@ export default function InvoiceGenerator() {
     doc.text('სულ (GEL)', totalsLabelX, currentY)
     doc.text(`${total.toFixed(2)} GEL`, valueX, currentY, { align: 'right' })
 
-    currentY += 25
+    currentY += 12
     doc.setFontSize(11)
     doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
     doc.text('საბანკო რეკვიზიტები:', 14, currentY)
@@ -304,6 +310,14 @@ export default function InvoiceGenerator() {
             </div>
           ))}
         </div>
+        {extraFees.length < 10 && (
+          <button
+            onClick={addExtraFee}
+            className="mt-3 text-sm text-[#1976BA] hover:text-blue-800 font-semibold transition-colors"
+          >
+            + ხარჯის დამატება
+          </button>
+        )}
       </div>
 
       {/* პროდუქტის ძებნა */}
