@@ -18,6 +18,12 @@ interface ExtraFee {
   amount: number
 }
 
+interface ExtraMaterial {
+  label: string
+  price: number
+  quantity: number
+}
+
 export default function InvoiceGenerator() {
   const [text, setText] = useState('')
   const [query] = useDebounce(text, 500)
@@ -25,16 +31,18 @@ export default function InvoiceGenerator() {
   const [selectedItems, setSelectedItems] = useState<SelectedProduct[]>([])
   const [discount, setDiscount] = useState(0)
 
-  // ველები
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [clientName, setClientName] = useState('')
   const [clientTaxId, setClientTaxId] = useState('')
   const [clientAddress, setClientAddress] = useState('')
 
-  // დამატებითი ხარჯები
   const [extraFees, setExtraFees] = useState<ExtraFee[]>([
     { label: '', amount: 0 },
     { label: '', amount: 0 },
+  ])
+
+  const [extraMaterials, setExtraMaterials] = useState<ExtraMaterial[]>([
+    { label: '', price: 0, quantity: 1 },
   ])
 
   useEffect(() => {
@@ -69,12 +77,7 @@ export default function InvoiceGenerator() {
     } else {
       setSelectedItems([
         ...selectedItems,
-        {
-          id: product.id,
-          title: titleString,
-          price: product.price,
-          quantity: 1,
-        },
+        { id: product.id, title: titleString, price: product.price, quantity: 1 },
       ])
     }
     setText('')
@@ -91,7 +94,26 @@ export default function InvoiceGenerator() {
     setExtraFees((prev) => prev.map((fee, i) => (i === index ? { ...fee, [field]: value } : fee)))
   }
 
-  const subtotal = selectedItems.reduce((acc, item) => acc + item.price * item.quantity, 0)
+  const addExtraMaterial = () => {
+    if (extraMaterials.length < 10) {
+      setExtraMaterials((prev) => [...prev, { label: '', price: 0, quantity: 1 }])
+    }
+  }
+
+  const updateExtraMaterial = (
+    index: number,
+    field: 'label' | 'price' | 'quantity',
+    value: string | number,
+  ) => {
+    setExtraMaterials((prev) => prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)))
+  }
+
+  const materialsTotal = extraMaterials.reduce(
+    (acc, m) => acc + (Number(m.price) || 0) * (Number(m.quantity) || 0),
+    0,
+  )
+  const subtotal =
+    selectedItems.reduce((acc, item) => acc + item.price * item.quantity, 0) + materialsTotal
   const extraFeesTotal = extraFees.reduce((acc, fee) => acc + (Number(fee.amount) || 0), 0)
   const discountAmount = subtotal * (discount / 100)
   const total = subtotal - discountAmount + extraFeesTotal
@@ -109,34 +131,34 @@ export default function InvoiceGenerator() {
     const today = new Date().toLocaleDateString('ka-GE')
 
     doc.setFontSize(14)
-    doc.setTextColor(textColor[0], textColor[1], textColor[2])
+    doc.setTextColor(...textColor)
     doc.text('შპს აი-ტექნო (I-TECHNO LLC)', 14, 20)
 
     doc.setFontSize(26)
-    doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
+    doc.setTextColor(...themeColor)
     doc.text('ინვოისი', 196, 20, { align: 'right' })
 
     doc.setFontSize(12)
-    doc.setTextColor(textColor[0], textColor[1], textColor[2])
+    doc.setTextColor(...textColor)
     doc.text(`ინვოისის #: ${invoiceNumber}`, 196, 28, { align: 'right' })
     doc.text(`თარიღი: ${today}`, 196, 35, { align: 'right' })
 
     doc.setFontSize(10)
-    doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
+    doc.setTextColor(...themeColor)
     doc.text('ადრესატი', 14, 30)
 
     doc.setFontSize(12)
-    doc.setTextColor(textColor[0], textColor[1], textColor[2])
+    doc.setTextColor(...textColor)
     doc.text(clientName, 14, 37)
 
     doc.setFontSize(10)
-    doc.setTextColor(lightText[0], lightText[1], lightText[2])
+    doc.setTextColor(...lightText)
     doc.text(`ს/კ: ${clientTaxId}`, 14, 43)
     if (clientAddress) {
       doc.text(`მის: ${clientAddress}`, 14, 48)
     }
 
-    // ცხრილი — პროდუქტები + დამატებითი ხარჯები
+    // პროდუქტები + დამატებითი მასალები ერთ ცხრილში
     const tableBody = selectedItems.map((item) => [
       String(item.quantity),
       item.title,
@@ -144,10 +166,16 @@ export default function InvoiceGenerator() {
       `${(item.price * item.quantity).toFixed(2)} GEL`,
     ])
 
-    // დამატებითი ხარჯები ცხრილში
-    extraFees.forEach((fee) => {
-      if (fee.label && Number(fee.amount) > 0) {
-        tableBody.push(['—', fee.label, '—', `${Number(fee.amount).toFixed(2)} GEL`])
+    extraMaterials.forEach((m) => {
+      if (m.label && Number(m.price) > 0) {
+        const qty = Number(m.quantity) || 1
+        const price = Number(m.price) || 0
+        tableBody.push([
+          String(qty),
+          m.label,
+          `${price.toFixed(2)} GEL`,
+          `${(price * qty).toFixed(2)} GEL`,
+        ])
       }
     })
 
@@ -155,9 +183,7 @@ export default function InvoiceGenerator() {
       startY: clientAddress ? 68 : 62,
       head: [['რაოდ.', 'აღწერა', 'საცალო ფასი', 'ჯამი']],
       body: tableBody,
-
       theme: 'plain',
-
       styles: {
         font: 'Sylfaen',
         fontSize: 10,
@@ -165,23 +191,19 @@ export default function InvoiceGenerator() {
         cellPadding: { top: 5, right: 3, bottom: 5, left: 3 },
         valign: 'middle',
       },
-
       headStyles: {
         fillColor: themeColor,
         textColor: [255, 255, 255],
         fontStyle: 'normal',
         halign: 'center',
       },
-
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },
         1: { halign: 'left', cellWidth: 'auto' },
         2: { halign: 'right', cellWidth: 35 },
         3: { halign: 'right', cellWidth: 35 },
       },
-
       tableWidth: 'auto',
-
       didDrawCell: function (data) {
         if (data.row.section === 'body' && data.column.index === 0) {
           const { x, y } = data.cell
@@ -198,7 +220,7 @@ export default function InvoiceGenerator() {
 
     // @ts-expect-error - finalY
     let currentY = doc.lastAutoTable.finalY
-    doc.setDrawColor(themeColor[0], themeColor[1], themeColor[2])
+    doc.setDrawColor(...themeColor)
     doc.setLineWidth(0.4)
     doc.line(14, currentY, 196, currentY)
 
@@ -206,15 +228,14 @@ export default function InvoiceGenerator() {
     const valueX = 196
     const totalsLabelX = 140
     doc.setFontSize(10)
-    doc.setTextColor(textColor[0], textColor[1], textColor[2])
+    doc.setTextColor(...textColor)
     doc.text('ჯამი', totalsLabelX, currentY)
     doc.text(`${subtotal.toFixed(2)} GEL`, valueX, currentY, { align: 'right' })
 
-    // დამატებითი ხარჯები totals-ში
     extraFees.forEach((fee) => {
       if (fee.label && Number(fee.amount) > 0) {
         currentY += 8
-        doc.setTextColor(textColor[0], textColor[1], textColor[2])
+        doc.setTextColor(...textColor)
         doc.text(`${fee.label}:`, totalsLabelX, currentY)
         doc.text(`${Number(fee.amount).toFixed(2)} GEL`, valueX, currentY, { align: 'right' })
       }
@@ -225,7 +246,7 @@ export default function InvoiceGenerator() {
       doc.setTextColor(220, 38, 38)
       doc.text(`ფასდაკლება (${discount}%):`, totalsLabelX, currentY)
       doc.text(`- ${discountAmount.toFixed(2)} GEL`, valueX, currentY, { align: 'right' })
-      doc.setTextColor(textColor[0], textColor[1], textColor[2])
+      doc.setTextColor(...textColor)
     }
 
     currentY += 4
@@ -235,16 +256,16 @@ export default function InvoiceGenerator() {
 
     currentY += 11
     doc.setFontSize(11)
-    doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
+    doc.setTextColor(...themeColor)
     doc.text('სულ (GEL)', totalsLabelX, currentY)
     doc.text(`${total.toFixed(2)} GEL`, valueX, currentY, { align: 'right' })
 
     currentY += 12
     doc.setFontSize(11)
-    doc.setTextColor(themeColor[0], themeColor[1], themeColor[2])
+    doc.setTextColor(...themeColor)
     doc.text('საბანკო რეკვიზიტები:', 14, currentY)
     doc.setFontSize(10)
-    doc.setTextColor(lightText[0], lightText[1], lightText[2])
+    doc.setTextColor(...lightText)
     doc.text(
       `მიმწოდებელი: შპს აიტეჩნო/ITECHNO LTD\nბანკი: თიბისი ბანკი\nIBAN: GE85TB7712236080100008\nინვოისი ძალაშია აღნიშნული თარიღიდან 1 კვირა\nსრული თანხა დღგ-ს ჩათვლით`,
       14,
@@ -316,6 +337,54 @@ export default function InvoiceGenerator() {
             className="mt-3 text-sm text-[#1976BA] hover:text-blue-800 font-semibold transition-colors"
           >
             + ხარჯის დამატება
+          </button>
+        )}
+      </div>
+
+      {/* დამატებითი მასალები */}
+      <div className="mb-6">
+        <label className="block text-sm text-gray-600 mb-3 font-bold">დამატებითი მასალები</label>
+        <div className="flex flex-col gap-3">
+          {extraMaterials.map((m, index) => (
+            <div key={index} className="flex gap-3 items-center">
+              <input
+                placeholder="მასალის დასახელება"
+                value={m.label}
+                onChange={(e) => updateExtraMaterial(index, 'label', e.target.value)}
+                className="flex-1 border p-2 rounded outline-none focus:ring-2 focus:ring-[#1976BA]"
+              />
+              <input
+                type="number"
+                min="1"
+                step="1"
+                placeholder="რაოდ."
+                value={m.quantity === 0 ? '' : m.quantity}
+                onChange={(e) =>
+                  updateExtraMaterial(index, 'quantity', parseInt(e.target.value) || 1)
+                }
+                className="w-24 border p-2 rounded outline-none focus:ring-2 focus:ring-[#1976BA] text-center"
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={m.price === 0 ? '' : m.price}
+                onChange={(e) =>
+                  updateExtraMaterial(index, 'price', parseFloat(e.target.value) || 0)
+                }
+                className="w-36 border p-2 rounded outline-none focus:ring-2 focus:ring-[#1976BA] text-right"
+              />
+              <span className="text-gray-500 text-sm font-medium w-8">GEL</span>
+            </div>
+          ))}
+        </div>
+        {extraMaterials.length < 10 && (
+          <button
+            onClick={addExtraMaterial}
+            className="mt-3 text-sm text-[#1976BA] hover:text-blue-800 font-semibold transition-colors"
+          >
+            + მასალის დამატება
           </button>
         )}
       </div>
