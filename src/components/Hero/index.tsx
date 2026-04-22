@@ -96,14 +96,20 @@ export const Hero = ({ lang = 'ka', t }: HeroProps) => {
 
         {slides.length > 1 && (
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-10">
-            {slides.map((_, i) => (
+            {slides.map((slide, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`transition-all duration-300 rounded-full ${
-                  i === current ? 'w-10 h-2 bg-[#1976BA]' : 'w-2 h-2 bg-white'
-                }`}
-              />
+                aria-label={`სლაიდი ${i + 1}: ${slide.title}`}
+                aria-current={i === current ? 'true' : undefined}
+                className={`transition-all duration-300 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center p-0 bg-transparent border-0`}
+              >
+                <span
+                  className={`block rounded-full transition-all duration-300 ${
+                    i === current ? 'w-10 h-2 bg-[#1976BA]' : 'w-2 h-2 bg-white'
+                  }`}
+                />
+              </button>
             ))}
           </div>
         )}

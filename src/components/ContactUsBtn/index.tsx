@@ -26,18 +26,16 @@ const ContactButton: React.FC = () => {
         }
       `}</style>
 
-      <button
-        className="p-6 rounded-full font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 animate-glow"
-        style={{
-          backgroundColor: '#1976BA',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0081D7')}
-        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1976BA')}
+      <Link
+        href="tel:+995595126054"
+        aria-label="call us"
+        className="w-14 h-14 rounded-full font-bold text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 animate-glow"
+        style={{ backgroundColor: '#1976BA', minWidth: '44px', minHeight: '44px' }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#0081D7')}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#1976BA')}
       >
-        <Link href="tel:+995595126054">
-          <Phone className="w-5 h-5" aria-hidden="true" />
-        </Link>
-      </button>
+        <Phone className="w-5 h-5" aria-hidden="true" />
+      </Link>
     </div>
   )
 }
