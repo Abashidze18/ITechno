@@ -1,35 +1,47 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const locales = ['ka', 'en']
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const locales = ['ka', 'en']
 
-  if (pathname.startsWith('/_next') || pathname.includes('.') || pathname.startsWith('/admin')) {
+  // 1. სწრაფი შემოწმება სტატიკურ ფაილებზე (თუ matcher-მა მაინც გამოატარა)
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/api')
+  ) {
     return NextResponse.next()
   }
 
-  console.log('--- MiddleWare Check ---')
-  console.log('Path:', pathname)
-
+  // 2. მთავარი გვერდის რეზერვაცია (Redirect / -> /ka)
   if (pathname === '/') {
-    console.log('Status: Root Path - Redirecting to /ka')
-    const url = request.nextUrl.clone()
-    url.pathname = `/ka`
-    return NextResponse.redirect(url)
+    return NextResponse.redirect(new URL('/ka', request.url))
   }
 
+  // 3. ენის შემოწმება
   const hasLocale = locales.some((loc) => pathname.startsWith(`/${loc}/`) || pathname === `/${loc}`)
-  console.log('Has Locale:', hasLocale)
 
   if (hasLocale) return NextResponse.next()
 
-  console.log('Redirecting to:', `/ka${pathname}`)
-  const url = request.nextUrl.clone()
-  url.pathname = `/ka${pathname}`
-  return NextResponse.redirect(url)
+  // 4. თუ ენა არ აქვს, დავამატოთ /ka
+  return NextResponse.redirect(new URL(`/ka${pathname}`, request.url))
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|admin).*)'],
+  // უფრო მკაცრი ფილტრი, რომ Middleware ნაკლებჯერ გაიღვიძოს
+  matcher: [
+    /*
+     * გამოვრიცხავთ:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - admin
+     * - ყველა ფაილი გაფართოებით (მაგ: .svg, .jpg, .png და ა.შ.)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|admin|.*\\..*).*)',
+  ],
 }
