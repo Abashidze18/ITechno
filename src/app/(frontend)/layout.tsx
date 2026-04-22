@@ -2,6 +2,7 @@ import React from 'react'
 import './globals.css'
 import { firaGo400, firaGo600, lgvAnastasia } from '../fonts'
 import Script from 'next/script'
+import ContactButton from '@/components/ContactUsBtn'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="antialiased">
         {children}
+
+        <ContactButton />
 
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-825214182"
