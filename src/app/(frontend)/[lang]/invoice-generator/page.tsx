@@ -77,7 +77,7 @@ export default function InvoiceGenerator() {
     } else {
       setSelectedItems([
         ...selectedItems,
-        { id: product.id, title: titleString, price: product.price, quantity: 1 },
+        { id: product.id, title: titleString, price: product.price ?? 0, quantity: 1 },
       ])
     }
     setText('')
