@@ -9,8 +9,6 @@ import Hikvision from '@/assets/Hikvision_logo.svg'
 import Ezviz from '@/assets/Eviz_logo.svg'
 import HiWatch from '@/assets/HiWatch_logo.svg'
 
-import 'swiper/css'
-
 export const BrandsSlider = () => {
   // შენი ლოკალური ლოგოები (რადგან assets-დან გინდა)
   const localBrands = [
