@@ -17,6 +17,9 @@ interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>
 }
 
+// კატეგორია რომელიც პირველი უნდა ჩაიტვირთოს "ყველა"-ში
+const PRIORITY_CATEGORY_SLUG = 'video-surveillance' // შეცვალე შენი სლაგით
+
 // --- SEO & DYNAMIC METADATA ---
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { lang, category } = await params
@@ -71,7 +74,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+// --- HELPER: ყველა შვილი კატეგორიის ID-ები ---
+function getAllChildIds(parentId: string | number, allCategories: Category[]): (string | number)[] {
+  const children = allCategories.filter((c) => {
+    const pId =
+      typeof c.parent === 'object' && c.parent !== null && 'id' in c.parent
+        ? (c.parent as { id: string | number }).id
+        : c.parent
+    return String(pId) === String(parentId)
+  })
+  return children.reduce<(string | number)[]>(
+    (acc, child) => [...acc, child.id, ...getAllChildIds(child.id, allCategories)],
+    [],
+  )
+}
+
 // --- MAIN PAGE COMPONENT ---
+
+export const revalidate = 7200 // 2 საათი წამებში
+
 export default async function Page({ params, searchParams }: PageProps) {
   const { lang, category: categoryArray } = await params
   const resolvedSearchParams = await searchParams
@@ -94,7 +115,7 @@ export default async function Page({ params, searchParams }: PageProps) {
   const allCategories = await getCachedCategories(currentLang)
 
   let activeCategoryId: string | number | null = null
-  let categoryFilterNames: string[] = [] // სახელების მასივი Products-ისთვის
+  let categoryFilterNames: string[] = []
 
   if (categorySlug) {
     const matchingCats = allCategories.filter((c) => c.slug === categorySlug)
@@ -119,40 +140,22 @@ export default async function Page({ params, searchParams }: PageProps) {
     if (foundCat) {
       activeCategoryId = foundCat.id
 
-      // 1. ვიღებთ ID-ების მასივს (შენს შემთხვევაში მოდის [1])
       const filterIds = (foundCat.assignedFilters as (string | number)[]) || []
-
       const filtersData = await payload.find({
         collection: 'filters',
-        where: {
-          id: { in: filterIds },
-        },
+        where: { id: { in: filterIds } },
         locale: currentLang,
         limit: 100,
       })
-
       categoryFilterNames = filtersData.docs.map((f) => f.name).filter(Boolean)
     }
   }
 
+  // 2. საერთო ფილტრები (search, URL params)
   const andFilters: Where[] = []
 
   if (activeCategoryId) {
-    const getAllChildIds = (parentId: string | number): (string | number)[] => {
-      const children = allCategories.filter((c) => {
-        const pId =
-          typeof c.parent === 'object' && c.parent !== null && 'id' in c.parent
-            ? (c.parent as { id: string | number }).id
-            : c.parent
-        return String(pId) === String(parentId)
-      })
-      return children.reduce<(string | number)[]>(
-        (acc, child) => [...acc, child.id, ...getAllChildIds(child.id)],
-        [],
-      )
-    }
-
-    const allRelatedIds = [activeCategoryId, ...getAllChildIds(activeCategoryId)]
+    const allRelatedIds = [activeCategoryId, ...getAllChildIds(activeCategoryId, allCategories)]
     andFilters.push({
       or: [{ category: { in: allRelatedIds } }, { additionalCategories: { in: allRelatedIds } }],
     })
@@ -164,14 +167,130 @@ export default async function Page({ params, searchParams }: PageProps) {
     })
   }
 
-  // URL ფილტრების დამუშავება
   Object.entries(filterParams).forEach(([key, value]) => {
     if (value) {
       andFilters.push({ 'filter_values.value_rel.value': { equals: value } })
     }
   })
 
-  const [productsRes, specs] = await Promise.all([
+  // 3. Specs fetch (პარალელურად)
+  const specsPromise = fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/products/unique-specs?lang=${currentLang}`,
+    { next: { revalidate: 3600 } },
+  )
+    .then((r) => (r.ok ? r.json() : {}))
+    .catch(() => ({}))
+
+  // 4. Products fetch — priority logic მხოლოდ "ყველა" + page 1-ზე
+  const isPriorityMode = !activeCategoryId && validatedPage === 1
+
+  let productsRes: PaginatedDocs<Product>
+
+  if (isPriorityMode) {
+    const priorityCat = allCategories.find((c) => c.slug === PRIORITY_CATEGORY_SLUG)
+
+    if (priorityCat) {
+      const priorityIds = [priorityCat.id, ...getAllChildIds(priorityCat.id, allCategories)]
+
+      // პარალელური query — priority + specs ერთდროულად
+      const [priorityRes, specs] = await Promise.all([
+        payload.find({
+          collection: 'products',
+          where: {
+            and: [
+              {
+                or: [
+                  { category: { in: priorityIds } },
+                  { additionalCategories: { in: priorityIds } },
+                ],
+              },
+              ...andFilters, // search და სხვა ფილტრები
+            ],
+          },
+          locale: currentLang,
+          limit: 16,
+          depth: 2,
+          sort: '-createdAt',
+        }),
+        specsPromise,
+      ])
+
+      const priorityDocIds = priorityRes.docs.map((p) => p.id)
+      const remaining = 16 - priorityDocIds.length
+
+      // დანარჩენი პროდუქტები — priority-ს ID-ები გამოვრიცხეთ
+      const restRes =
+        remaining > 0
+          ? await payload.find({
+              collection: 'products',
+              where: {
+                and: [
+                  // priority კატეგორიის პროდუქტები გამოვრიცხოთ ID-ით (სწრაფი, indexed)
+                  { id: { not_in: priorityDocIds } },
+                  ...andFilters,
+                ],
+              },
+              locale: currentLang,
+              limit: remaining,
+              depth: 2,
+              sort: '-createdAt',
+            })
+          : ({
+              docs: [],
+              totalDocs: 0,
+              totalPages: 1,
+              page: 1,
+            } as unknown as PaginatedDocs<Product>)
+
+      const mergedDocs = [...priorityRes.docs, ...restRes.docs]
+      const totalDocs = priorityRes.totalDocs + (restRes.totalDocs ?? 0)
+
+      productsRes = {
+        ...priorityRes,
+        docs: mergedDocs,
+        totalDocs,
+        totalPages: Math.ceil(totalDocs / 16),
+        page: 1,
+        hasNextPage: totalDocs > 16,
+        nextPage: totalDocs > 16 ? 2 : null,
+      } as PaginatedDocs<Product>
+
+      return (
+        <main className="min-h-screen">
+          <h1 className="sr-only">
+            {currentLang === 'ka' ? 'პროდუქტების კატალოგი' : 'Products Catalog'}
+          </h1>
+          <Products
+            products={productsRes}
+            allCategories={allCategories.map((c) => ({ ...c, displayName: c.name || 'No Name' }))}
+            lang={currentLang}
+            t={t}
+            specs={specs as UniqueSpecs}
+            activeCategorySlug={categorySlug}
+            categoryFilters={categoryFilterNames}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'ItemList',
+                itemListElement: mergedDocs.map((p: Product, index: number) => ({
+                  '@type': 'ListItem',
+                  position: index + 1,
+                  url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
+                  name: p.title,
+                })),
+              }),
+            }}
+          />
+        </main>
+      )
+    }
+  }
+
+  // 5. ჩვეულებრივი რეჟიმი (კატეგორია არჩეულია, ან page > 1, ან priority cat არ მოიძებნა)
+  const [productsResult, specs] = await Promise.all([
     payload.find({
       collection: 'products',
       where: andFilters.length > 0 ? { and: andFilters } : {},
@@ -181,13 +300,10 @@ export default async function Page({ params, searchParams }: PageProps) {
       depth: 2,
       sort: '-createdAt',
     }),
-    fetch(
-      `${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/api/products/unique-specs?lang=${currentLang}`,
-      { next: { revalidate: 300 } },
-    )
-      .then((r) => (r.ok ? r.json() : {}))
-      .catch(() => ({})),
+    specsPromise,
   ])
+
+  productsRes = productsResult
 
   return (
     <main className="min-h-screen">
@@ -198,20 +314,15 @@ export default async function Page({ params, searchParams }: PageProps) {
             ? 'პროდუქტების კატალოგი'
             : 'Products Catalog'}
       </h1>
-
       <Products
         products={productsRes as PaginatedDocs<Product>}
-        allCategories={allCategories.map((c) => ({
-          ...c,
-          displayName: c.name || 'No Name',
-        }))}
+        allCategories={allCategories.map((c) => ({ ...c, displayName: c.name || 'No Name' }))}
         lang={currentLang}
         t={t}
         specs={specs as UniqueSpecs}
         activeCategorySlug={categorySlug}
         categoryFilters={categoryFilterNames}
       />
-
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
