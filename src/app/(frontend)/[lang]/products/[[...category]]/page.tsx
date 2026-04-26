@@ -297,7 +297,7 @@ export default async function Page({ params, searchParams }: PageProps) {
       locale: currentLang,
       limit: 16,
       page: validatedPage,
-      depth: 2,
+      depth: 1,
       sort: '-createdAt',
     }),
     specsPromise,

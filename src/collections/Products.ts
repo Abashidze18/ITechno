@@ -40,9 +40,12 @@ export const Products: CollectionConfig = {
         const result = await payload.find({
           collection: 'products',
           depth: 1,
-          limit: 1000,
+          limit: 1700,
           pagination: false,
           locale: lang as 'ka' | 'en',
+          select: {
+            filter_values: true,
+          },
         })
 
         const dynamicFilters: Record<string, string[]> = {}
@@ -71,7 +74,11 @@ export const Products: CollectionConfig = {
           dynamicFilters[key].sort()
         })
 
-        return Response.json(dynamicFilters)
+        return Response.json(dynamicFilters, {
+          headers: {
+            'Cache-Control': 'public, s-maxage=7200, stale-while-revalidate=600',
+          },
+        })
       },
     },
   ],
