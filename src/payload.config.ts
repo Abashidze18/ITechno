@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
-import { s3Adapter } from '@payloadcms/plugin-cloud-storage/s3'
+import { s3Storage } from '@payloadcms/storage-s3'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -65,32 +65,32 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || process.env.DATABASE_URI || '',
+      connectionString: process.env.DATABASE_URI,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     },
   }),
   sharp,
 
   // მთავარი ნაწილი: Cloud Storage პლაგინი
   plugins: [
-    cloudStoragePlugin({
+    s3Storage({
       collections: {
         media: {
-          // დარწმუნდი, რომ Media კოლექციის slug არის 'media'
-          adapter: s3Adapter({
-            config: {
-              endpoint: process.env.S3_ENDPOINT,
-              region: 'auto',
-              credentials: {
-                accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-                secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-              },
-            },
-            bucket: process.env.S3_BUCKET || '',
-          }),
-          // ეს ფუნქცია აუცილებელია, რომ სურათები საიტზე გამოჩნდეს
+          prefix: '',
           generateFileURL: ({ filename }: { filename: string }) => {
             return `${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${filename}`
           },
+        },
+      },
+      bucket: process.env.S3_BUCKET || '',
+      config: {
+        endpoint: process.env.S3_ENDPOINT,
+        region: 'auto',
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         },
       },
     }),

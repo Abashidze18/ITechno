@@ -73,7 +73,13 @@ export interface Config {
     'filter-options': FilterOption;
     products: Product;
     categories: Category;
+    'hero-slider': HeroSlider;
+    'category-bar': CategoryBar;
     brands: Brand;
+    'about-us': AboutUs;
+    services: Service;
+    'contact-info': ContactInfo;
+    'contact-page': ContactPage;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -87,7 +93,13 @@ export interface Config {
     'filter-options': FilterOptionsSelect<false> | FilterOptionsSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
+    'category-bar': CategoryBarSelect<false> | CategoryBarSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
+    'about-us': AboutUsSelect<false> | AboutUsSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    'contact-info': ContactInfoSelect<false> | ContactInfoSelect<true>;
+    'contact-page': ContactPageSelect<false> | ContactPageSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -159,6 +171,7 @@ export interface User {
 export interface Media {
   id: number;
   alt: string;
+  prefix?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -213,10 +226,14 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
-  price: number;
+  price?: number | null;
   discountPrice?: number | null;
   stock?: ('in-stock' | 'out-of-stock') | null;
   category: number | Category;
+  /**
+   * პროდუქტი ამ კატეგორიებშიც გამოჩნდება
+   */
+  additionalCategories?: (number | Category)[] | null;
   brand?: (number | null) | Brand;
   mainImage: number | Media;
   images?:
@@ -252,6 +269,215 @@ export interface Category {
 export interface Brand {
   id: number;
   name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero-slider".
+ */
+export interface HeroSlider {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება
+   */
+  title: string;
+  /**
+   * ღილაკი 1 - ტექსტი (მაგ: "ყველა პროდუქტი")
+   */
+  buttonAllProducts?: string | null;
+  /**
+   * ღილაკი 2 - ტექსტი (მაგ: "ჩვენი სერვისები")
+   */
+  buttonOurServices?: string | null;
+  slides?:
+    | {
+        title: string;
+        description: string;
+        image: number | Media;
+        /**
+         * ღილაკი 1 - ლინკი (მაგ: /ka/products)
+         */
+        link1: string;
+        /**
+         * ღილაკი 2 - ლინკი (მაგ: /ka/about-us)
+         */
+        link2: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "category-bar".
+ */
+export interface CategoryBar {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება
+   */
+  title: string;
+  /**
+   * პირველი ღილაკის ტექსტი (მაგ: "ყველა" / "All Shop")
+   */
+  allShopLabel?: string | null;
+  items?:
+    | {
+        category: number | Category;
+        /**
+         * ბარათის ფონის სურათი
+         */
+        backgroundImage: number | Media;
+        /**
+         * პატარა ხატულა (SVG/PNG, თეთრი ფონზე)
+         */
+        icon?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about-us".
+ */
+export interface AboutUs {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება (მაგ: "About Us - კა")
+   */
+  title: string;
+  hero: {
+    titleBlue: string;
+    titleBlack: string;
+    story: string;
+    image: number | Media;
+  };
+  priority?: {
+    title?: string | null;
+    sub?: string | null;
+    analysis?: string | null;
+  };
+  directions?: {
+    title?: string | null;
+    items?:
+      | {
+          title?: string | null;
+          image: number | Media;
+          /**
+           * გადამისამართების URL (მაგ: /ka/services#cameras)
+           */
+          link?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  support?: {
+    badge?: string | null;
+    title?: string | null;
+    text1?: string | null;
+    text2?: string | null;
+  };
+  whyUs?: {
+    badge?: string | null;
+    title?: string | null;
+    items?:
+      | {
+          title?: string | null;
+          text?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება (მაგ: "Services - KA")
+   */
+  title: string;
+  items: {
+    title: string;
+    description: string;
+    brands?:
+      | {
+          name?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    features?:
+      | {
+          name?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    id?: string | null;
+  }[];
+  cta?: {
+    title?: string | null;
+    text?: string | null;
+  };
+  header?: {
+    badge?: string | null;
+    heading?: string | null;
+    sub?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-info".
+ */
+export interface ContactInfo {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება
+   */
+  title: string;
+  infoTitle?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  socials?:
+    | {
+        platformName: string;
+        icon: 'facebook' | 'instagram' | 'linkedin' | 'twitter' | 'youtube' | 'globe';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  address?: string | null;
+  /**
+   * Google Maps embed src URL
+   */
+  mapEmbedUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page".
+ */
+export interface ContactPage {
+  id: number;
+  /**
+   * მხოლოდ Admin პანელში გამოჩნდება
+   */
+  title: string;
+  /**
+   * Hero სათაური (საიტზე გამოჩნდება)
+   */
+  contactPageTitle?: string | null;
+  subtitle?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -304,8 +530,32 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
+        relationTo: 'hero-slider';
+        value: number | HeroSlider;
+      } | null)
+    | ({
+        relationTo: 'category-bar';
+        value: number | CategoryBar;
+      } | null)
+    | ({
         relationTo: 'brands';
         value: number | Brand;
+      } | null)
+    | ({
+        relationTo: 'about-us';
+        value: number | AboutUs;
+      } | null)
+    | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'contact-info';
+        value: number | ContactInfo;
+      } | null)
+    | ({
+        relationTo: 'contact-page';
+        value: number | ContactPage;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -377,6 +627,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  prefix?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -429,6 +680,7 @@ export interface ProductsSelect<T extends boolean = true> {
   discountPrice?: T;
   stock?: T;
   category?: T;
+  additionalCategories?: T;
   brand?: T;
   mainImage?: T;
   images?:
@@ -455,10 +707,181 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero-slider_select".
+ */
+export interface HeroSliderSelect<T extends boolean = true> {
+  title?: T;
+  buttonAllProducts?: T;
+  buttonOurServices?: T;
+  slides?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        image?: T;
+        link1?: T;
+        link2?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "category-bar_select".
+ */
+export interface CategoryBarSelect<T extends boolean = true> {
+  title?: T;
+  allShopLabel?: T;
+  items?:
+    | T
+    | {
+        category?: T;
+        backgroundImage?: T;
+        icon?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "brands_select".
  */
 export interface BrandsSelect<T extends boolean = true> {
   name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about-us_select".
+ */
+export interface AboutUsSelect<T extends boolean = true> {
+  title?: T;
+  hero?:
+    | T
+    | {
+        titleBlue?: T;
+        titleBlack?: T;
+        story?: T;
+        image?: T;
+      };
+  priority?:
+    | T
+    | {
+        title?: T;
+        sub?: T;
+        analysis?: T;
+      };
+  directions?:
+    | T
+    | {
+        title?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              image?: T;
+              link?: T;
+              id?: T;
+            };
+      };
+  support?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        text1?: T;
+        text2?: T;
+      };
+  whyUs?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              text?: T;
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  title?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        brands?:
+          | T
+          | {
+              name?: T;
+              id?: T;
+            };
+        features?:
+          | T
+          | {
+              name?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  cta?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+      };
+  header?:
+    | T
+    | {
+        badge?: T;
+        heading?: T;
+        sub?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-info_select".
+ */
+export interface ContactInfoSelect<T extends boolean = true> {
+  title?: T;
+  infoTitle?: T;
+  phone?: T;
+  email?: T;
+  socials?:
+    | T
+    | {
+        platformName?: T;
+        icon?: T;
+        url?: T;
+        id?: T;
+      };
+  address?: T;
+  mapEmbedUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-page_select".
+ */
+export interface ContactPageSelect<T extends boolean = true> {
+  title?: T;
+  contactPageTitle?: T;
+  subtitle?: T;
   updatedAt?: T;
   createdAt?: T;
 }
