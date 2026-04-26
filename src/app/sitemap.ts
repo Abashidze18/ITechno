@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 604800 // 7 დღე
 
 type SlugDoc = { slug: string; updatedAt?: string }
