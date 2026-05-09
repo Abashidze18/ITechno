@@ -102,7 +102,7 @@ export const Hero = ({ lang = 'ka', t }: HeroProps) => {
                 onClick={() => setCurrent(i)}
                 aria-label={`სლაიდი ${i + 1}: ${slide.title}`}
                 aria-current={i === current ? 'true' : undefined}
-                className={`transition-all duration-300 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center p-0 bg-transparent border-0`}
+                className={`transition-all duration-300 rounded-full min-w-auto min-h-[44px] flex items-center justify-center p-0 bg-transparent border-0`}
               >
                 <span
                   className={`block rounded-full transition-all duration-300 ${
