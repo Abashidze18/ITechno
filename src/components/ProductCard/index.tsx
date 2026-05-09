@@ -40,7 +40,11 @@ export const ProductCard = ({ product, lang }: ProductCardProps) => {
   const t = translations[currentLang] || translations['ka']
 
   return (
-    <Link href={`/${lang}/product-details/${product.slug}`} className="group block h-full">
+    <Link
+      href={`/${lang}/product-details/${product.slug}`}
+      className="group block h-full"
+      prefetch={false}
+    >
       <div className="bg-white border border-gray-200 rounded-[20px] overflow-hidden transition-all duration-300 hover:shadow-xl p-4 h-full flex flex-col relative">
         <div className="absolute top-4 left-4 z-10">
           <span className="bg-[#1976BA] text-white text-xs px-3 py-1 rounded-md font-bold">

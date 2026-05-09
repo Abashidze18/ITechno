@@ -89,6 +89,7 @@ export const Products = ({
             <div key={cat.id}>
               <Link
                 href={createCategoryLink(cat.slug || null)}
+                prefetch={false}
                 className={`group flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all ${
                   isActive
                     ? 'bg-[#1976BA] text-white shadow-sm'
