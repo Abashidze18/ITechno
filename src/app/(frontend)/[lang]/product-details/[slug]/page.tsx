@@ -182,7 +182,7 @@ export default async function ProductDetails({ params }: PageProps) {
         '@type': 'ListItem',
         position: 1,
         name: currentLang === 'ka' ? 'პროდუქცია' : 'Products',
-        item: `${BASE_URL}/${currentLang}/${PRODUCTS_ROUTE}`,
+        item: `${BASE_URL}/${currentLang}/${PRODUCTS_LIST_ROUTE}`,
       },
       ...(category
         ? [
@@ -190,7 +190,7 @@ export default async function ProductDetails({ params }: PageProps) {
               '@type': 'ListItem',
               position: 2,
               name: category.name,
-              item: `${BASE_URL}/${currentLang}/${PRODUCTS_ROUTE}/${category.slug}`,
+              item: `${BASE_URL}/${currentLang}/${PRODUCTS_LIST_ROUTE}/${category.slug}`,
             },
           ]
         : []),
@@ -198,7 +198,7 @@ export default async function ProductDetails({ params }: PageProps) {
         '@type': 'ListItem',
         position: category ? 3 : 2,
         name: product.title,
-        item: pageUrl,
+        item: `${BASE_URL}/${currentLang}/${PRODUCTS_ROUTE}/${slug}`,
       },
     ],
   }

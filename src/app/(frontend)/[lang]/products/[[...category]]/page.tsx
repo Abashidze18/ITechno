@@ -33,10 +33,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? 'აღმოაჩინეთ უახლესი ტექნოლოგიები, უსაფრთხოების კამერები და ჭკვიანი სახლის სისტემები I-TECHNO-ზე.'
       : 'Discover the latest technologies, security cameras, and smart home systems at I-TECHNO.'
 
+  let isRealCategory = true
+
   if (categorySlug) {
     try {
       const allCats = await getCachedCategories(currentLang)
       const cat = allCats.find((c) => c.slug === categorySlug)
+
       if (cat) {
         const catName = cat.name || categorySlug
         title = `${catName}`
@@ -44,9 +47,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           currentLang === 'ka'
             ? `იყიდეთ ${catName} საუკეთესო ფასად. გარანტია და ადგილზე მიტანის სერვისი მთელ საქართველოში.`
             : `Buy ${catName} at the best price. Warranty and delivery service throughout Georgia.`
+      } else {
+        // თუ სლაგო წერია, მაგრამ კატეგორიებში ვერ ვიპოვეთ, ესე იგი არასწორი URL-ია
+        isRealCategory = false
       }
     } catch (e) {
       console.error('Metadata fetch error', e)
+    }
+  }
+
+  // თუ კატეგორია არ არსებობს, ვთიშავთ ინდექსაციას ამ URL-ისთვის
+  if (!isRealCategory) {
+    return {
+      title: 'Page Not Found',
+      robots: {
+        index: false,
+        follow: true,
+      },
     }
   }
 
@@ -55,21 +72,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    metadataBase: new URL(baseUrl),
     alternates: {
-      canonical: `${baseUrl}${canonicalPath}`,
+      canonical: canonicalPath,
       languages: {
-        'ka-GE': `/ka/products${categorySlug ? `/${categorySlug}` : ''}`,
-        'en-US': `/en/products${categorySlug ? `/${categorySlug}` : ''}`,
+        ka: `/ka/products${categorySlug ? `/${categorySlug}` : ''}`,
+        en: `/en/products${categorySlug ? `/${categorySlug}` : ''}`,
       },
     },
     openGraph: {
       title,
       description,
-      url: `${baseUrl}${canonicalPath}`,
+      url: canonicalPath,
       siteName: 'I-TECHNO',
       locale: currentLang === 'ka' ? 'ka_GE' : 'en_US',
       type: 'website',
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
   }
 }
