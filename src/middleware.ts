@@ -2,27 +2,12 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const locales = ['ka', 'en']
-
-const VALID_CATEGORIES = [
-  'video-surveillance',
-  'storage-devices',
-  'network-devices',
-  'smart-home',
-  'security-alarm',
-  'network-equipment',
-  'ezviz-smart-home',
-  'tvdisplays',
-  'fire-alarm-systems',
-  'cables',
-  'ajax',
-  'access-control-systems',
-  // ჩაწერე აქ შენი დანარჩენი კატეგორიების სლაგები
-]
+const BASE_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
 
 const BLOCKED_EXTENSIONS = ['.php', '.asp', '.aspx', '.jsp', '.env', '.git']
 const BLOCKED_PATHS = ['wp-admin', 'admin-panel', 'cgi-bin', 'etc/passwd', '.well-known']
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const pathnameLower = pathname.toLowerCase()
 
@@ -45,19 +30,35 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // --- ახალი ლოგიკა: /products/ -> /product-details/ REDIRECT ---
+  // --- სრულიად დინამიური ლოგიკა: /products/ -> /product-details/ ---
   const segments = pathname.split('/').filter(Boolean)
-  // segments მაგალითი: ['en', 'products', 'doorphone-slug']
 
   if (segments.length === 3 && segments[1] === 'products') {
     const [lang, , slug] = segments
 
-    // თუ სლაგო არ არის კატეგორიების სიაში, ესე იგი პროდუქტია
-    if (!VALID_CATEGORIES.includes(slug)) {
-      return NextResponse.redirect(
-        new URL(`/${lang}/product-details/${slug}`, request.url),
-        301, // აუცილებლად 301, რომ Google-მა ლინკი ჩაანაცვლოს
+    try {
+      // ვეკითხებით Payload-ის API-ს, არსებობს თუ არა პროდუქტი ამ სლაგით
+      // ვიყენებთ `limit=1` და `select`, რომ პასუხი იყოს მომენტალური
+      const response = await fetch(
+        `${BASE_URL}/api/products?where[slug][equals]=${slug}&limit=1&select[slug]=true`,
+        {
+          next: { revalidate: 3600 }, // ბრაუზერის დონეზეც რომ დააქეშოს Next-მა
+        },
       )
+
+      if (response.ok) {
+        const data = await response.json()
+
+        // თუ პროდუქტებში იპოვა ასეთი სლაგო, ესე იგი ეგ ლინკი შეცდომაა და ვაკეთებთ რედირექტს!
+        if (data.docs && data.docs.length > 0) {
+          return NextResponse.redirect(
+            new URL(`/${lang}/product-details/${slug}`, request.url),
+            301,
+          )
+        }
+      }
+    } catch (error) {
+      console.error('Middleware product check error:', error)
     }
   }
   // -----------------------------------------------------------
