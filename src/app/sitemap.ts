@@ -12,10 +12,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
   const langs = ['ka', 'en'] as const
 
+  // ── სტატიკური გვერდები ──────────────────────────────────────────────────────
   const staticPages = [
     { path: '', priority: 1.0, freq: 'weekly' as const },
     { path: '/about-us', priority: 0.7, freq: 'monthly' as const },
     { path: '/contact', priority: 0.7, freq: 'monthly' as const },
+    // products მთავარი გვერდი (/ka/products და /en/products)
+    { path: '/products', priority: 0.9, freq: 'daily' as const },
   ]
 
   const staticEntries = staticPages.flatMap(({ path, priority, freq }) =>
@@ -34,7 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   )
 
-  // კატეგორიები — 200-ზე ნაკლებია, pagination არ სჭირდება
+  // ── კატეგორიები ─────────────────────────────────────────────────────────────
+  // 200-ზე ნაკლებია, pagination არ სჭირდება
   const categoriesRes = await payload.find({
     collection: 'categories',
     limit: 200,
@@ -59,7 +63,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   )
 
-  // პროდუქტები — paginated fetch, ყველა გვერდი
+  // ── პროდუქტები ───────────────────────────────────────────────────────────────
+  // IMPORTANT: product-details route — არა /products/
+  // middleware redirect-ს /products/<slug> → /product-details/<slug> გადამისამართება
+  // sitemap-ში საბოლოო კანონიკური URL-ები უნდა იყოს
   const fetchAllProducts = async (): Promise<SlugDoc[]> => {
     const all: SlugDoc[] = []
     let page = 1
@@ -85,15 +92,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const productEntries = allProducts.flatMap((prod) =>
     langs.map((lang) => ({
-      url: `${baseUrl}/${lang}/products/${prod.slug}`,
+      // ← product-details (არა /products/)
+      url: `${baseUrl}/${lang}/product-details/${prod.slug}`,
       lastModified: prod.updatedAt ? new Date(prod.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
       alternates: {
         languages: {
-          'ka-GE': `${baseUrl}/ka/products/${prod.slug}`,
-          'en-US': `${baseUrl}/en/products/${prod.slug}`,
-          'x-default': `${baseUrl}/ka/products/${prod.slug}`,
+          'ka-GE': `${baseUrl}/ka/product-details/${prod.slug}`,
+          'en-US': `${baseUrl}/en/product-details/${prod.slug}`,
+          'x-default': `${baseUrl}/ka/product-details/${prod.slug}`,
         },
       },
     })),

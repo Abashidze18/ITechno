@@ -20,12 +20,20 @@ interface PageProps {
 // კატეგორია რომელიც პირველი უნდა ჩაიტვირთოს "ყველა"-ში
 const PRIORITY_CATEGORY_SLUG = 'video-surveillance' // შეცვალე შენი სლაგით
 
+// params რომლებიც canonical-ს არ ცვლის
+const ALLOWED_PARAMS = new Set(['page', 'q'])
+
 // --- SEO & DYNAMIC METADATA ---
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { lang, category } = await params
+  const resolvedSearch = await searchParams
   const categorySlug = category?.[category.length - 1]
   const currentLang = (lang === 'en' ? 'en' : 'ka') as SupportedLang
   const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
+
+  // filter params-ის დეტექცია — page და q გარდა ყველა filter-ია
+  const { page: _page, q: _q, ...filterParams } = resolvedSearch
+  const hasFilters = Object.keys(filterParams).length > 0
 
   let title = currentLang === 'ka' ? 'მაღაზია' : 'Shop'
   let description =
@@ -48,7 +56,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             ? `იყიდეთ ${catName} საუკეთესო ფასად. გარანტია და ადგილზე მიტანის სერვისი მთელ საქართველოში.`
             : `Buy ${catName} at the best price. Warranty and delivery service throughout Georgia.`
       } else {
-        // თუ სლაგო წერია, მაგრამ კატეგორიებში ვერ ვიპოვეთ, ესე იგი არასწორი URL-ია
         isRealCategory = false
       }
     } catch (e) {
@@ -56,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  // თუ კატეგორია არ არსებობს, ვთიშავთ ინდექსაციას ამ URL-ისთვის
+  // თუ კატეგორია არ არსებობს, ვთიშავთ ინდექსაციას
   if (!isRealCategory) {
     return {
       title: 'Page Not Found',
@@ -67,6 +74,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
+  // canonical ყოველთვის filter-ების გარეშე
   const canonicalPath = categorySlug ? `/${lang}/products/${categorySlug}` : `/${lang}/products`
 
   return {
@@ -74,7 +82,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     metadataBase: new URL(baseUrl),
     alternates: {
-      canonical: canonicalPath,
+      canonical: canonicalPath, // ← ყოველთვის clean URL, filter params გარეშე
       languages: {
         ka: `/ka/products${categorySlug ? `/${categorySlug}` : ''}`,
         en: `/en/products${categorySlug ? `/${categorySlug}` : ''}`,
@@ -89,16 +97,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'website',
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
-    },
+    // filter params-იანი URL-ები არ ინდექსირდება
+    robots: hasFilters
+      ? {
+          index: false,
+          follow: true,
+        }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+          },
+        },
   }
 }
 
@@ -220,7 +234,6 @@ export default async function Page({ params, searchParams }: PageProps) {
     if (priorityCat) {
       const priorityIds = [priorityCat.id, ...getAllChildIds(priorityCat.id, allCategories)]
 
-      // პარალელური query — priority + specs ერთდროულად
       const [priorityRes, specs] = await Promise.all([
         payload.find({
           collection: 'products',
@@ -232,7 +245,7 @@ export default async function Page({ params, searchParams }: PageProps) {
                   { additionalCategories: { in: priorityIds } },
                 ],
               },
-              ...andFilters, // search და სხვა ფილტრები
+              ...andFilters,
             ],
           },
           locale: currentLang,
@@ -246,17 +259,12 @@ export default async function Page({ params, searchParams }: PageProps) {
       const priorityDocIds = priorityRes.docs.map((p) => p.id)
       const remaining = 16 - priorityDocIds.length
 
-      // დანარჩენი პროდუქტები — priority-ს ID-ები გამოვრიცხეთ
       const restRes =
         remaining > 0
           ? await payload.find({
               collection: 'products',
               where: {
-                and: [
-                  // priority კატეგორიის პროდუქტები გამოვრიცხოთ ID-ით (სწრაფი, indexed)
-                  { id: { not_in: priorityDocIds } },
-                  ...andFilters,
-                ],
+                and: [{ id: { not_in: priorityDocIds } }, ...andFilters],
               },
               locale: currentLang,
               limit: remaining,
@@ -306,7 +314,7 @@ export default async function Page({ params, searchParams }: PageProps) {
                 itemListElement: mergedDocs.map((p: Product, index: number) => ({
                   '@type': 'ListItem',
                   position: index + 1,
-                  url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
+                  url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/product-details/${p.slug}`,
                   name: p.title,
                 })),
               }),
@@ -317,7 +325,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     }
   }
 
-  // 5. ჩვეულებრივი რეჟიმი (კატეგორია არჩეულია, ან page > 1, ან priority cat არ მოიძებნა)
+  // 5. ჩვეულებრივი რეჟიმი
   const [productsResult, specs] = await Promise.all([
     payload.find({
       collection: 'products',
@@ -360,7 +368,8 @@ export default async function Page({ params, searchParams }: PageProps) {
             itemListElement: productsRes.docs.map((p: Product, index: number) => ({
               '@type': 'ListItem',
               position: index + 1,
-              url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/products/${p.slug}`,
+              // ← product-details (სწორი canonical route)
+              url: `${process.env.NEXT_PUBLIC_SERVER_URL}/${currentLang}/product-details/${p.slug}`,
               name: p.title,
             })),
           }),
