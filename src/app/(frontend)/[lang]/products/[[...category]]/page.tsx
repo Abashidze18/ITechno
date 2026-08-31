@@ -1,5 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { notFound } from 'next/navigation'
 import { Products } from '@/components/Products'
 import dict from '@/lib/translations.json'
 import { Where } from 'payload'
@@ -97,11 +98,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       type: 'website',
       images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     },
-    // filter params-იანი URL-ები არ ინდექსირდება
+    // filter params-იანი URL-ები არ ინდექსირდება და აღარც crawl-დება შემდგომ კომბინაციებში
     robots: hasFilters
       ? {
           index: false,
-          follow: true,
+          follow: false,
         }
       : {
           index: true,
@@ -190,6 +191,11 @@ export default async function Page({ params, searchParams }: PageProps) {
         limit: 100,
       })
       categoryFilterNames = filtersData.docs.map((f) => f.name).filter(Boolean)
+    } else {
+      // categorySlug მითითებულია, მაგრამ არცერთ კატეგორიას არ ემთხვევა (მაგ. ძველი პროდუქტის
+      // slug ან typo) — ნამდვილი 404 საჭიროა, თორემ გვერდი "ყველა პროდუქტს" აჩვენებდა 200-ით
+      // და Google-იც ამ დუბლირებულ კონტენტს მთავარ გვერდზე აკანონიკალებდა
+      notFound()
     }
   }
 

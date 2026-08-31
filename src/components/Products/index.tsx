@@ -239,6 +239,8 @@ function FilterSection({
             <Link
               key={item}
               href={onSelect(isActive ? null : item)}
+              rel="nofollow"
+              prefetch={false}
               className={`px-3 py-2 text-[10px] border rounded-xl text-center transition-all ${
                 isActive
                   ? 'bg-[#1976BA] border-[#1976BA] text-white font-bold shadow-md'
