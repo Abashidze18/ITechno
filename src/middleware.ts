@@ -9,6 +9,16 @@ const BLOCKED_PATHS = ['wp-admin', 'admin-panel', 'cgi-bin', 'etc/passwd', '.wel
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // www -> non-www (301)
+  const host = request.headers.get('host') || ''
+  if (host.startsWith('www.')) {
+    const url = request.nextUrl.clone()
+    url.host = host.slice(4)
+    url.port = ''
+    url.protocol = 'https'
+    return NextResponse.redirect(url, 301)
+  }
   const pathnameLower = pathname.toLowerCase()
 
   // 1. უსაფრთხოების ფილტრი

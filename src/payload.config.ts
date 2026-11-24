@@ -65,10 +65,10 @@ export default buildConfig({
   },
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URI,
-      ssl: {
-        rejectUnauthorized: false,
-      },
+      connectionString: process.env.DATABASE_URI || process.env.DATABASE_URL,
+      ssl: /localhost|127\.0\.0\.1/.test(process.env.DATABASE_URI || process.env.DATABASE_URL || '')
+        ? false
+        : { rejectUnauthorized: false },
     },
   }),
   sharp,

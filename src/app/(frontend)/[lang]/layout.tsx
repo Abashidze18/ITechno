@@ -20,7 +20,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params
   const isEn = lang === 'en'
-  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://i-techno.ge'
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'https://itechno.ge'
   const isProduction = process.env.NEXT_PUBLIC_INDEXABLE === 'true'
 
   const slogan = isEn ? 'Security Systems & Technologies' : 'უსაფრთხოების სისტემები და ტექნოლოგიები'
@@ -62,7 +62,13 @@ export async function generateMetadata({
       url: `${baseUrl}/${lang}`,
       type: 'website',
       locale: isEn ? 'en' : 'ka',
-      images: [{ url: '/og-main.jpg', width: 1200, height: 630, alt: 'I-TECHNO' }],
+      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'I-TECHNO' }],
+    },
+
+    twitter: {
+      card: 'summary_large_image',
+      title: `I-TECHNO - ${slogan}`,
+      images: ['/og-image.png'],
     },
 
     robots: {
