@@ -27,13 +27,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: freq,
       priority,
-      alternates: {
-        languages: {
-          'ka-GE': `${baseUrl}/ka${path}`,
-          'en-US': `${baseUrl}/en${path}`,
-          'x-default': `${baseUrl}/ka${path}`,
-        },
-      },
     })),
   )
 
@@ -53,13 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: cat.updatedAt ? new Date(cat.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.85,
-      alternates: {
-        languages: {
-          'ka-GE': `${baseUrl}/ka/products/${cat.slug}`,
-          'en-US': `${baseUrl}/en/products/${cat.slug}`,
-          'x-default': `${baseUrl}/ka/products/${cat.slug}`,
-        },
-      },
     })),
   )
 
@@ -97,13 +83,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: prod.updatedAt ? new Date(prod.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.9,
-      alternates: {
-        languages: {
-          'ka-GE': `${baseUrl}/ka/product-details/${prod.slug}`,
-          'en-US': `${baseUrl}/en/product-details/${prod.slug}`,
-          'x-default': `${baseUrl}/ka/product-details/${prod.slug}`,
-        },
-      },
     })),
   )
 
